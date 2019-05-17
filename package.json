@@ -1,0 +1,52 @@
+{
+  "name": "@cdoublev/react-utils",
+  "description": "Common React hooks and components to use in a React application",
+  "author": "Guillaume Lebas",
+  "license": "MIT",
+  "keywords": [
+    "react",
+    "react-hooks"
+  ],
+  "version": "0.1.0",
+  "homepage": "https://github.com/creativewave/react-utils",
+  "bugs": "https://github.com/creativewave/react-utils/issues",
+  "repository": "github:creativewave/react-utils",
+  "directories": {
+    "test": "test"
+  },
+  "files": [
+    "dist"
+  ],
+  "main": "dist/cjs/index.js",
+  "module": "dist/es/index.js",
+  "scripts": {
+    "prebuild": "rm -rf dist",
+    "build": "npm run build:cjs && npm run build:es",
+    "build:cjs": "BABEL_ENV=cjs babel src -d dist/cjs",
+    "build:es": "BABEL_ENV=es babel src -d dist/es",
+    "lint": "eslint src",
+    "prepublishOnly": "npm run lint && npm run test && npm run build",
+    "test": "jest --passWithNoTests"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.5.5",
+    "@babel/core": "^7.5.5",
+    "@babel/preset-env": "^7.5.5",
+    "@babel/preset-react": "^7.0.0",
+    "@cdoublev/eslint-config": "^0.1.0",
+    "babel-jest": "^24.9.0",
+    "eslint": "^6.2.2",
+    "eslint-plugin-compat": "^3.3.0",
+    "eslint-plugin-react": "^7.14.3",
+    "eslint-plugin-react-hooks": "^2.0.1",
+    "jest": "^24.9.0",
+    "prop-types": "^15.7.2",
+    "react": "^16.9.0"
+  },
+  "peerDependencies": {
+    "react": "^16.7.0-alpha.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
