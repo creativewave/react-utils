@@ -25,7 +25,6 @@
     "build:cjs": "BABEL_ENV=cjs babel src -d dist/cjs",
     "build:es": "BABEL_ENV=es babel src -d dist/es",
     "lint": "eslint src",
-    "prepublishOnly": "npm run lint && npm run test && npm run build",
     "test": "jest --passWithNoTests"
   },
   "devDependencies": {
