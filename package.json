@@ -48,5 +48,14 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "browserslist": {
+    "production": [
+      "last 2 versions",
+      "not ie <= 11"
+    ],
+    "development": [
+      "last 1 Chrome version"
+    ]
   }
 }
