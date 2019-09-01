@@ -21,36 +21,36 @@ This package contains common hooks and components to use in a React application.
 
 ## useIntersectionObserver
 
-`useIntersectionObserver` abstracts using an `IntersectionObserver` to execute a function (such as a side effect or a state update) when an element intersects its container.
+`useIntersectionObserver` abstracts using an `IntersectionObserver` to execute a function when a DOM element intersects a parent element.
 
-A single observer instance is created per unique set of intersection options, and each observed element is automatically `unobserve`d before unmounting or (opt-in) after its first intersection.
+`useIntersectionObserver :: Configuration -> void`
 
-`useIntersectionObserver :: Options -> void`
+**Configuration:**
 
-**Options:**
+- `targets` (required) are references of `HTMLElement`s to observe
+- `root`, `rootMargin`, and `threshold` are `IntersectionObserver` options ([MDN](https://developer.mozilla.org/en-US/docs/Web/API/IntersectionObserver/IntersectionObserver#Parameters))
+- `onEnter` and `onExit` are optional callbacks executed with the arguments received from the `IntersectionObserver` callback, when an `HTMLElement` is intersecting or stops intersecting
+- `once` is an optional `Boolean` to `unobserve` an `HTMLElement` after its first intersection
 
-- `targets` are references of `HTMLElement` to observe
-- `root`, `rootMargin`, and `threshold` are the IntersectionObserver options ([MDN](https://developer.mozilla.org/en-US/docs/Web/API/IntersectionObserver/IntersectionObserver#Parameters))
-- `onEnter` and `onExit` are callbacks executed with the arguments received from the `IntersectionObserver` when a given `HTMLElement` is intersecting or stops intersecting
-- `once` will `unobserve` the observed `HTMLElement` after its first intersection
+**Note:** make sure to use static/memoized functions for `onEnter`/`onExit`, otherwise they will trigger an observe/unobserve effect/cleanup on each update.
 
-**Note:** make sure to use static/memoized functions for `onEnter` and `onExit`, otherwise they will trigger an observe/unobserve effect/cleanup on each update.
+A single observer will be created for each unique set of intersection options (`root`, `rootMargin`, and `threshold`), and each observed element is automatically `unobserve`d before unmounting or (opt-in) after its first intersection.
 
 ## useInterval
 
 *Credit: [Dan Abramov](https://overreacted.io/making-setinterval-declarative-with-react-hooks/).*
 
-`useInterval` abstracts using `setInterval` and `clearInterval` to schedule and repeat the execution of a function over time (such as a side effect or a state update), without worrying about timer cancellation and avoiding a memory leak such as *a React state update on an unmounted component*.
+`useInterval` abstracts using `setInterval` and `clearInterval` to schedule and repeat the execution of a function over time, without worrying about cancelling the timer and avoiding a memory leak such as *a React state update on an unmounted component*.
 
 `useInterval :: [Function, Number] -> void`
 
-It will stop repeating its execution if the component unmounts, or if its reference or the delay has changed.
+It will stop repeating the execution of the function if the component unmounts, or if the reference of the function or its delay has changed.
 
 ## useGatherMemo
 
-`useGatherMemo` abstracts gathering properties from an object and memoizing the result.
+`useGatherMemo` abstracts merging, gathering, and/or picking properties from object(s), and memoizing the result, ie. by preserving reference(s).
 
-It's a low level hook which can be usefull eg. when you want to merge options or props received in a hook or a component, with a large object of default options, instead of listing each option as an argument with its default value.
+It's a low level hook which can be usefull eg. when you want to merge options or props received in a hook or a component, with a large default options object, instead of listing each option argument with a default value, and/or listing each one as a dependency of a hook (which should react to an update).
 
 `useGatherMemo :: [Object, ...String|Symbol] -> [a, Object]`
 
@@ -59,23 +59,27 @@ It's a low level hook which can be usefull eg. when you want to merge options or
 ```js
     const options = { color: 'red', size: 'large' }
 
-    // 1. Pick prop(s) and gather the rest: both will be defined with the same
-    //    value/reference if options shallow equals its previous render value
+    // 1. Pick prop(s) and gather the rest
+    //    Both constants will be defined with a memoized value/reference,
+    //    if `options` shallow equals its previous render value
     const [color, subOptions] = useGatherMemo(options, 'color')
     /*   { color, ...rest } = options */
-    console.log(color, rest) // 'red' { size: 'large' }
+    console.log(color, subOptions) // 'red' { size: 'large' }
 
-    // 2. Merge: allOptions will be defined with the same object reference
-    //    if rest has not changed since the previous render
-    const allOptions = useGatherMemo({ ...rest, display: 'fullscreen' })
+    // 2. Merge properties
+    //    `allOptions` will be defined with a memoized reference,
+    //    if `subOptions` shallow equals its previous render value
+    const allOptions = useGatherMemo({ ...subOptions, display: 'fullscreen' })
     console.log(allOptions) // { size: 'large', display: 'fullscreen' }
 ```
+
+**Warning:** don't over use it, ie. use it only with large objects, otherwise it will negatively impact performances by increasing the call stack as well as the amount of data stored in memory.
 
 ## useLazyStateUpdate
 
 `useLazyStateUpdate` abstracts delaying a state update.
 
-Give it a state value that will be updated over time, and a delay (default to `100`), and it will return the corresponding state by delaying its update during the given delay.
+Give it a state value that will be updated over time, and a delay (default to `100` ms), and it will return the corresponding state by delaying future updates.
 
 It could be used eg. to delay the display of an error message coming from the validation of an input value updated on each change.
 
@@ -91,25 +95,30 @@ It could be used eg. to delay the display of an error message coming from the va
 
 `useScrollIntoView` abstracts using `Element.scrollIntoView()` when a `scroll` event is emitted.
 
-It should receive a collection of `HTMLElement`s, a reference of an optional `root` container element, and an optional `beforeScroll` callback to set the `HTMLElement` to scroll in to view. By default, depending on the scroll direction, it either prevents the default event and scroll into view the next or previous element from the `HTMLElement`s collection, or it does nothing, ie. the `root` container element is normally scrolled by the user agent.
+By default, depending on the scroll direction, either it prevents the default event and scroll into view the next or previous element from a given collection of `HTMLElement`s, or the container element is normally scrolled by the user agent.
 
-It also abstracts using `useIntersectionObserver`, to execute a function when an element intersects its container, ie. when it enters in its viewport.
+It also abstracts using `IntersectionObserver` to execute a function when an element intersects its container, ie. when it enters in or exits from its viewport.
 
-`useScrollIntoView :: Options -> IntersectionObserverOptions -> void`
+`useScrollIntoView :: Configuration -> IntersectionObserverOptions -> void`
 
-**IntersectionObserverOptions:** see [`useIntersectionObserver`](#useIntersectionObserver). Juste note that touch/wheel events will be registered on the `HTMLElement` defined with its `root` option value. It will default to `document` (SSR supported).
+**Configuration:**
 
-**Options:**
+- `targets` (required) is a collection of `HTMLElement`s to scroll into view
+- `root` (default to the document/viewport) is a reference of an optional container element
+- `beforeScroll` is an optional callback which could be used eg. to set a CSS transition classname before scrolling, or to set the element to scroll into view by returning its index value, and which receive as arguments (1) the index of the target that will be scrolled into view, (2) the current target index and (3) the scrolling direction  (`up` or `down`)
+- `delay` (default to `200` ms) is a timeout value before scrolling
+- `wait` (default to `1000` ms) is a timeout value between two authorized scroll events
+- `mode` (default to `auto`) is the [scrolling behavior](https://drafts.csswg.org/cssom-view/#smooth-scrolling)
 
-- `targets` is the collection of `HTMLElement`s to scroll into view
-- `beforeScroll` is a callback receiving (1) the index of the target that will be scrolled into view, which could be overriden by returning a custom index value, or to set a CSS transition classname, as well as (2) the current target index, and (3) the direction of the scroll/swipe, ie. `up` or `down`
-- `delay` is the timeout value to use when scheduling the scroll (default to `200` ms)
-- `wait` is the timeout value between two authorized scroll event (default to `1000` ms)
-- `mode` is the [scrolling behavior](https://drafts.csswg.org/cssom-view/#smooth-scrolling) (default to `auto`)
+**IntersectionObserverOptions:**
+
+See [`useIntersectionObserver`](#useIntersectionObserver).
+
+Juste note that touch/wheel events will be registered on the `HTMLElement` defined with `root` in `Configuration`.
 
 ## useTimeout
 
-`useTimeout` abstracts using `setTimeout` and `clearTimeout` to schedule the execution of a function (such as a side effect or a state update), without worrying about timer cancellation and avoiding a memory leak such as *a React state update on an unmounted component*.
+`useTimeout` abstracts using `setTimeout` and `clearTimeout` to schedule the execution of a function, without worrying about cancelling the timer and avoiding a memory leak such as *a React state update on an unmounted component*.
 
 `useTimeout :: [Function, Number] -> void`
 
@@ -117,17 +126,17 @@ It will cancel its execution if the component unmounts, or if its reference or t
 
 ## useTransition
 
-`useTransition` abstracts using `useTimeout` to schedule multiple state updates over time, with different delays and durations. It will always return the current state as a collection, which can be conceptualized as a box whose values are entering and exiting over time.
+`useTransition` abstracts scheduling multiple state updates over time, with different delays and durations.
 
-It can be used eg. to transition between CSS classnames when a component is mounted or before unmouting.
+It will always return the current state as a collection, which can be conceptualized as a box whose values are entering and exiting in and out over time. It can be used eg. to transition between CSS classnames when a component is mounted or before unmouting.
 
-`useTransition :: { transitions: [Transition], onExit?: [Transition] } -> [[a], Restart, Exit?, Boolean?, Enter?]`
+`useTransition :: { transitions: [Transition], onExit?: Transition } -> [[a], Restart, Exit?, Boolean?, Enter?]`
 
-A `Transition` is a collection of a state value and one or two `Number`s. The first `Number` is the delay before the given state is applied, and the latter is the duration during which it should be applied. Exception: the `Transition` defined on `onExit` only contains a duration `Number`.
-
-`Exit`, `Enter`, and the `Boolean` value are returned only when `onExit` is provided. `Exit` will execute the `Transition` defined on `onExit` before toggling the `Boolean` value to `false`, indicating that the component can be considered as unmounted. `Enter` will toggle this value back to `true`.
+A `Transition` (`[a, Number, Number?]`) is a collection of a state value (`a`), and one or two `Number`s: the first one is the delay before the given state is applied, and the second is the duration during which it should be applied, excepted for the `Transition` defined on `onExit`, which is defined only with a duration.
 
 **Note:** `transitions` should be memoized, otherwhise the inital state will always be applied.
+
+`Exit`, `Enter`, and the `Boolean` are returned only when `onExit` is provided. `Exit` will execute the `Transition` defined on `onExit` before toggling the `Boolean` value to `false`, indicating that the component can be considered as unmounted. `Enter` will toggle this value back to `true`.
 
 **Demo:** [CodePen](https://codepen.io/creative-wave/pen/vMRRWd).
 
@@ -137,11 +146,11 @@ Related packages:
 
 ## useValidation
 
-`useValidation` abstracts using the Constraint Validation API to validate a form field on blur (default) or on change.
+`useValidation` abstracts using the Constraint Validation API (MDN)[https://developer.mozilla.org/en-US/docs/Web/API/Constraint_validation] to validate a form field on blur (default) or on change.
 
 `useValidation :: { onChange?: Function, onBlur?: Function, validateOnChange?: Boolean } -> [String, Props]`
 
-It returns any error message from the Constraint Validation API, and a collection of a component properties such as `onChange` and `onBlur` event handlers, which should be used with an `<input>`, `<select>` or `<textarea>`. Each of those handlers will be composed with any corresponding handler given as an argument.
+It returns any error message from the Constraint Validation API, and a collection of a component properties such as `onChange` and `onBlur` event handlers, which should be used on an `<input>`, `<select>` or `<textarea>`. Each of those handlers will be composed with any corresponding handler given as argument.
 
 ## Components
 
@@ -160,9 +169,9 @@ It returns any error message from the Constraint Validation API, and a collectio
 | shadow       | offsetX, offsetY, blur, spread, opacity                        |
 | shadow-inset | offsetX, offsetY, blur, thresold, opacity                      |
 
-All prop types are numbers or strings representing numbers, except for the `blend` prop of the noise filter.
+All prop types are numbers, or strings representing numbers, except for the `blend` prop of the noise filter, which should be a CSS blend mode value (string).
 
-Lightness always default to 0, ie. no white or black mixed in, and opacity always default to 0.5.
+Lightness always default to 0, ie. with no white or black mixed in, and opacity always default to 0.5.
 
 Using a single filter effect (it should not have a `in` or `result` prop):
 
