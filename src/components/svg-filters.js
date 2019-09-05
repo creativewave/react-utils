@@ -193,7 +193,7 @@ const primitives = {
 /**
  * Filter :: Props -> React.Element
  *
- * Props => { id: String, [SVGFeAttribute]: SVGFeAttributeValue }
+ * Props => { name: String, [SVGFeAttribute]: SVGFeAttributeValue }
  *
  * It should not wrap the filter primitive inside a `<filter>` container if a
  * previous `in` or a following `result` filter primitive id is given as prop.
@@ -201,22 +201,23 @@ const primitives = {
  * Memo: the first primitive doesn't require a `in` prop, as it will default to
  * `SourceGraphic` natively.
  */
-const Filter = ({ id, ...props }) => {
+const Filter = ({ id, name, ...props }) => {
 
     if (props.in || props.result) {
-        return primitives[id](props)
+        return primitives[name](props)
     }
 
     const { height, width, x, y } = id === 'glow'
         ? { height: '300%', width: '300%', x: '-100%', y: '-100%' }
         : { height: '200%', width: '200%', x: '-50%', y: '-50%' }
 
-    return <filter id={id} x={x} y={y} width={width} height={height}>{primitives[id](props)}</filter>
+    return <filter id={id || name} x={x} y={y} width={width} height={height}>{primitives[name](props)}</filter>
 }
 
 Filter.propTypes = {
-    id: PropTypes.oneOf(Object.keys(primitives)),
+    id: PropTypes.string,
     in: PropTypes.string,
+    name: PropTypes.oneOf(Object.keys(primitives)),
     result: PropTypes.string,
 }
 
