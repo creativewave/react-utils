@@ -152,11 +152,9 @@ Related packages:
 
 It returns any error message from the Constraint Validation API, and a collection of a component properties such as `onChange` and `onBlur` event handlers, which should be used on an `<input>`, `<select>` or `<textarea>`. Each of those handlers will be composed with any corresponding handler given as argument.
 
-## Components
+### <Filter>
 
-## <Filter>
-
-`<Filter>` provides common filter effects to use in a `<svg>`. Each filter effect is indentified by an `id` property.
+`<Filter>` provides common filter effects to use in a `<svg>`. Each filter effect is indentified by a `name` property.
 
 **List of effects and their props:**
 
@@ -176,14 +174,17 @@ Lightness always default to 0, ie. with no white or black mixed in, and opacity 
 Using a single filter effect (it should not have a `in` or `result` prop):
 
 ```js
-    <Filter id='glow' blur='10' spread='3' opacity='0.7' />
+    <Filter id='glow-large' name='glow' blur='10' spread='3' opacity='0.3' />
+    <Filter id='glow-small' name='glow' blur='5'  spread='2' opacity='0.7' />
 ```
+
+**Note:** `id` will default to `name` if not provided.
 
 Composing filter effects (it should have a `in` and/or a `result` prop):
 
 ```js
     <filter id='glow-noise' x='-100%' y='-100%' height='300%' width='300%'>
-        <Filter id='glow' blur='10' spread='3' result='glow' />
-        <Filter id='noise' in='glow' opacity='0.2' frequency='0.2' />
+        <Filter name='glow' blur='10' spread='3' result='glow' />
+        <Filter name='noise' in='glow' opacity='0.2' frequency='0.2' />
     </filter>
 ```
