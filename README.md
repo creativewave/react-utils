@@ -19,6 +19,10 @@ This package contains common hooks and components to use in a React application.
 
 - [`<Filter>`](#Filter)
 
+***
+
+**(Hooks)**
+
 ## useIntersectionObserver
 
 `useIntersectionObserver` abstracts using an `IntersectionObserver` to execute a function when a DOM element intersects a parent element.
@@ -146,11 +150,15 @@ Related packages:
 
 ## useValidation
 
-`useValidation` abstracts using the Constraint Validation API (MDN)[https://developer.mozilla.org/en-US/docs/Web/API/Constraint_validation] to validate a form field on blur (default) or on change.
+`useValidation` abstracts using the Constraint Validation API [MDN](https://developer.mozilla.org/en-US/docs/Web/API/Constraint_validation) to validate a form field on blur (default) or on change.
 
 `useValidation :: { onChange?: Function, onBlur?: Function, validateOnChange?: Boolean } -> [String, Props]`
 
 It returns any error message from the Constraint Validation API, and a collection of a component properties such as `onChange` and `onBlur` event handlers, which should be used on an `<input>`, `<select>` or `<textarea>`. Each of those handlers will be composed with any corresponding handler given as argument.
+
+***
+
+**(Components)**
 
 ### <Filter>
 
