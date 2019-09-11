@@ -2,9 +2,8 @@
 import React from 'react'
 import log from '../lib/log'
 import noop from '../lib/noop'
+import { universalDocument } from '../lib/universal'
 import useIntersectionObserver from './useIntersectionObserver'
-
-const universalDocument = 'object' === typeof document ? document : {}
 
 /**
  * getScrollDirection :: (Event -> Position?) -> String|void
