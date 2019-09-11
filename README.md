@@ -11,6 +11,7 @@ This package contains common hooks and components to use in a React application.
 - [`useLazyStateUpdate`](#useLazyStateUpdate)
 - [`useMediaQuery`](#useMediaQuery)
 - [`useScrollIntoView`](#useScrollIntoView)
+- [`useSVGMousePosition`](#useSVGMousePosition)
 - [`useTimeout`](#useTimeout)
 - [`useTransition`](#useTransition)
 - [`useValidation`](#useValidation)
@@ -119,6 +120,25 @@ It also abstracts using `IntersectionObserver` to execute a function when an ele
 See [`useIntersectionObserver`](#useIntersectionObserver).
 
 Juste note that touch/wheel events will be registered on the `HTMLElement` defined with `root` in `Configuration`.
+
+## useSVGMousePosition
+
+`useSVGMousePosition` abstracts translating the mouse position relative to the viewport of the document (`window`), into a position relative to the viewbox of an `<svg>` element, when a `mousemove` event is emitted.
+
+It could be used eg. to change the position of an SVG element (shapes, filters, clips, masks, gradients, etc...) when hovering the `<svg>`.
+
+`useSVGMousePosition :: Configuration -> { x: Float, y: Float }`
+
+**Note:** the `<svg>` should preserve its aspect ratio, otherwise the position will be incorrect, as the current implementation is using `Element.getBoundingClientRect()` to get its dimensions.
+
+**Configuration:**
+
+- `root` (default to `document`) is a reference of the `HTMLElement` or the `SVGElement` to listen `mousemove` events on
+- `target` (default to `root`) is a reference of the `SVGElement` to use to translate the mouse position
+- `thresold` (default to `1`) is an optional number to "expand" or "shrink" the `target` box layout, ie. its [`DOMRect`](https://developer.mozilla.org/en-US/docs/Web/API/DOMRect), over which a `mousemove` event should update the mouse position
+- `inital` (default to `{ x: 0, y: 0 }`) is an optional initial position
+- `shouldListen` (default to `true`) is an optional `Boolean` to dynamically add/remove the `mousemove` event listener
+- `precision` (default to `2`) is an optional decimals number to round the mouse position
 
 ## useTimeout
 
