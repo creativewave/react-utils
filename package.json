@@ -29,9 +29,9 @@
     "test": "jest --passWithNoTests"
   },
   "devDependencies": {
-    "@babel/cli": "^7.5.5",
-    "@babel/core": "^7.5.5",
-    "@babel/preset-env": "^7.5.5",
+    "@babel/cli": "^7.6.0",
+    "@babel/core": "^7.6.0",
+    "@babel/preset-env": "^7.6.0",
     "@babel/preset-react": "^7.0.0",
     "@cdoublev/eslint-config": "^0.2.0",
     "babel-jest": "^24.9.0",
