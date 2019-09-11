@@ -140,7 +140,7 @@ A `Transition` (`[a, Number, Number?]`) is a collection of a state value (`a`), 
 
 **Note:** `transitions` should be memoized, otherwhise the inital state will always be applied.
 
-`Exit`, `Enter`, and the `Boolean` are returned only when `onExit` is provided. `Exit` will execute the `Transition` defined on `onExit` before toggling the `Boolean` value to `false`, indicating that the component can be considered as unmounted. `Enter` will toggle this value back to `true`.
+`Exit`, `Enter`, and the `Boolean` are returned only when `onExit` is provided. `Exit` is a function to execute the `Transition` defined on `onExit` before toggling the `Boolean` value to `false`, indicating that the component can be considered as unmounted. `Enter` is a function to toggle this value back to `true`.
 
 **Demo:** [CodePen](https://codepen.io/creative-wave/pen/vMRRWd).
 
