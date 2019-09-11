@@ -170,7 +170,7 @@ Related packages:
 
 ## useValidation
 
-`useValidation` abstracts using the Constraint Validation API [MDN](https://developer.mozilla.org/en-US/docs/Web/API/Constraint_validation) to validate a form field on blur (default) or on change.
+`useValidation` abstracts using the Constraint Validation API ([MDN](https://developer.mozilla.org/en-US/docs/Web/API/Constraint_validation)) to validate a form field on blur (default) or on change.
 
 `useValidation :: { onChange?: Function, onBlur?: Function, validateOnChange?: Boolean } -> [String, Props]`
 
