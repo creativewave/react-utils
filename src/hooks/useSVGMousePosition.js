@@ -69,7 +69,7 @@ const useSVGMousePosition = ({
 
             const onMove = event => {
                 if (timerId.current) return
-                requestAnimationFrame(() => onMouseMove(event))
+                timerId.current = requestAnimationFrame(() => onMouseMove(event))
             }
             root.addEventListener('mousemove', onMove)
 
