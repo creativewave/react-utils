@@ -26,6 +26,7 @@ const defaultPosition = { x: 0, y: 0 }
  */
 const useSVGMousePosition = ({
     initial = defaultPosition,
+    isFixed = false,
     root = universalDocument,
     precision = 2,
     shouldListen = true,
@@ -40,8 +41,9 @@ const useSVGMousePosition = ({
         ({ clientX, clientY }) => {
 
             const rect = target.getBoundingClientRect()
-            const x = rect.x - window.scrollX
-            const y = rect.y - window.scrollY
+            const { x, y } = isFixed
+                ? { x: rect.x - window.scrollX, y: rect.y - window.scrollY }
+                : { x: rect.x, y: rect.y }
 
             if (hasSubArea && (
                 (clientX * thresold) < x
@@ -60,7 +62,7 @@ const useSVGMousePosition = ({
             })
             timerId.current = null
         },
-        [hasSubArea, precision, setPosition, target, thresold, timerId])
+        [hasSubArea, isFixed, precision, setPosition, target, thresold, timerId])
 
     React.useEffect(
         () => {
