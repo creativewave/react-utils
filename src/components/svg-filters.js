@@ -115,16 +115,12 @@ Noise.propTypes = {
 /**
  * shadow :: Props -> React.Element
  *
- * Memo: ideally, a shadow should cast a light using the same tint as the object
+ * Memo: ideally, a shadow should cast a light using the same tint as objects
  * it covers, with a lower luminosity and a higher saturation, ie. blended over
- * the graphic source using the multiply `mode` of `<feBlend>`, but SVG filters
- * can be blended only with their single graphic source object. A partial
- * workaround would be to use a copy of the graphic source, apply a shadow and
- * render only  the pixels outside of the graphic source, and finally define
- * `mix-blend-mode: multiply`.
- *
- * Memo: we can't compose the graphic source `out` of the shadow, as the offset
- * will result in transparent pixels between the graphic source and its shadow.
+ * them using the multiply `mode` of `<feBlend>`, but SVG filters can be blended
+ * only with their single graphic source object. A partial workaround would be
+ * to use a copy of the graphic source, blur it, render only the pixels outside
+ * of the graphic source, and finally define `mix-blend-mode: multiply` in CSS.
  *
  * Memo: don't use this filter alone, as it's non-sense to use JavaScript to
  * apply a filter already available and optimized as a CSS function.
