@@ -138,6 +138,7 @@ It could be used eg. to change the position of an SVG element (shapes, filters, 
 - `thresold` (default to `1`) is an optional number to "expand" or "shrink" the `target` box layout, ie. its [`DOMRect`](https://developer.mozilla.org/en-US/docs/Web/API/DOMRect), over which a `mousemove` event should update the mouse position
 - `inital` (default to `{ x: 0, y: 0 }`) is an optional initial position
 - `shouldListen` (default to `true`) is an optional `Boolean` to dynamically add/remove the `mousemove` event listener
+- `isFixed` (default to `false`) is an optional `Boolean` to flag the `target` as having a fixed position
 - `precision` (default to `2`) is an optional decimals number to round the mouse position
 
 ## useTimeout
