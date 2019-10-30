@@ -28,12 +28,15 @@ This package contains common hooks and components to use in a React application.
 
 `useIntersectionObserver` abstracts using an `IntersectionObserver` to execute a function when an `Element` intersects an ancestor, ie. when it enters in or exit from its ancestor's viewport.
 
-`useIntersectionObserver :: Configuration -> void`
+`useIntersectionObserver :: Configuration -> [CallbackRef, CallbackRef]`
+
+The first [`CallbackRef`](https://reactjs.org/docs/refs-and-the-dom.html#callback-refs) should be used to define `root`, ie. the ancestor containing the `Element`s to observe, defined with the second callback ref.
+
+Both should be used, either as a `ref` property in the corresponding component or executed directly with a reference to an `Element`. `root` will be `document` when it's set to `null`. You shouldn't worry about its execution on each update of the component, or when it unmounts.
 
 **Configuration:**
 
-- `targets` (required) are references to `Element`s to observe
-- `root`, `rootMargin`, and `threshold` are `IntersectionObserver` options ([MDN](https://developer.mozilla.org/en-US/docs/Web/API/IntersectionObserver/IntersectionObserver#Parameters))
+- `rootMargin` and `threshold` are two of the three `IntersectionObserver` options ([MDN](https://developer.mozilla.org/en-US/docs/Web/API/IntersectionObserver/IntersectionObserver#Parameters)), the third being `root`
 - `onEnter` and `onExit` are optional callbacks executed with the arguments received from the `IntersectionObserver` callback when an `Element` enters in or exits from its ancestor's viewport
 - `once` is an optional `Boolean` to unobserve an `Element` after its first entrance
 
