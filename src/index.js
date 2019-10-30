@@ -1,6 +1,7 @@
 
 export { default as Filter } from './components/svg-filters'
 export { default as useAnimate } from './hooks/useAnimate'
+export { default as useAnimateCustom } from './hooks/useAnimateCustom'
 export { default as useInterval } from './hooks/useInterval'
 export { default as useIntersectionObserver } from './hooks/useIntersectionObserver'
 export { default as useGatherMemo } from './hooks/useGatherMemo'
