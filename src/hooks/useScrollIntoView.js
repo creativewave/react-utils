@@ -30,29 +30,38 @@ const getScrollDirection = (event, previousTouch = {}) => {
 }
 
 /**
- * useScrollIntoView :: Options -> ([HTMLElement] -> void)
+ * useScrollIntoView :: Configuration -> IntersectionObserverConfiguration -> void
  *
- * Options => { ..., wait: Number }
+ * Configuration => {
+ *   beforeScroll?: (Number -> Number -> String) -> Number|void,
+ *   delay?: Number,
+ *   mode?: String,
+ *   wait?: Number,
+ * }
+ * IntersectionObserverConfiguration => {
+ *   onEnter?: (Entry -> Observer) -> void,
+ *   onExit?: (Entry -> Observer) -> void,
+ * }
  *
- * It should not scroll an `HTMLElement` into view on `pointerdown`, ie. when a
- * mouse button is pressed (including `mousedown`), or when a physical contact
+ * It should prevent scrolling an `Element` into view on `pointerdown`, ie. when
+ * a mouse button is pressed (including `mousedown`), or when a physical contact
  * (finger or stylus) is made with the digitizer (including `touchstart` but not
- * `touchmove` or `pointermove`).
+ * `touchmove` or `pointermove`), until `pointerup`.
  *
  * It should execute `beforeScroll` before scrolling, giving it a chance to set
- * the `HTMLElement` to scroll into view, otherwise it should scroll into view
- * the `HTMLElement` before or after the current one, depending on the `wheel`
- * or "swipe" (`touchstart`, `touchmove`, `touchend`) event direction.
+ * the `Element` to scroll into view, otherwise it should scroll into view the
+ * `Element` before or after the current one depending on the `wheel` or "swipe"
+ * (`touchstart`, `touchmove`, `touchend`) event direction.
  *
- * It should delay the execution of the scroll into view with the given `delay`,
- * ie. it should execute `beforeScroll`, wait, then scroll into view.
+ * It should delay scrolling into view with the given `delay`, ie. it should
+ * execute `beforeScroll`, wait, then scroll into view.
  *
- * It should throttle the scroll function with the given `wait`, ie. it should
+ * It should throttle scrolling into view with the given `wait`, ie. it should
  * scroll into view, then wait while ignoring any consecutive scroll event, then
  * listen for a new scroll event.
  *
- * Memo: `scroll` is triggered by user agents after a `wheel` or a `touchmove`
- * (+ `touchstart`) event, and defined/executed using their own implementation
+ * Memo: `scroll` is triggered by the user agent after a `wheel` or `touchmove`
+ * (+ `touchstart`) event and is defined/executed using their own implementation
  * (eg. Chrome uses a delay before scrolling) as well as the pointing device
  * features (eg. acceleration).
  *
