@@ -23,12 +23,12 @@ const defaultPosition = { x: 0, y: 0 }
  * in a callback given to `requestAnimationFrame()`, whose execution should be
  * guarded until its callback is run, to prevent forced synchronous layout.
  *
+ * It should use a `thresold` to expand/shrink the `target` area over which it
+ * should receive `mousemove` events.
+ *
  * It should listen for `mousemove` events in `root`, which should default to
  * `document` if `root` is null, over the given `target`, which should default
  * to `root` if `target` is null.
- *
- * It should use a `thresold` to expand/shrink the `target` area over which it
- * should receive `mousemove` events.
  *
  * TODO: compare performances of `SVG.createPoint()` and `SVG.getScreenCTM()` vs
  * `Element.getBoundingClientRect()`, to translate a DOM position into an SVG
@@ -44,7 +44,7 @@ const useSVGMousePosition = ({
     shouldListen = true,
     target = root,
     thresold = 1,
-}) => {
+} = {}) => {
 
     const [position, setPosition] = React.useState(initial)
     const timerId = React.useRef()
