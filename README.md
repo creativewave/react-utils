@@ -130,16 +130,18 @@ Both should be used, either as as a `ref` property in the corresponding componen
 
 It could be used eg. to change the position of a child `SVGElement` (paths, filters, clips, masks, gradients, etc...) when hovering its root `SVGElement`.
 
-`useSVGMousePosition :: Configuration -> Position`
+`useSVGMousePosition :: Configuration -> [Position, CallbackRef, CallbackRef]`
 
 `Position` represents the coordinates of the mouse in the `SVGElement`, relative to its `viewBox`: `Position => { x: Float, y: Float }`.
+
+The first [`CallbackRef`](https://reactjs.org/docs/refs-and-the-dom.html#callback-refs) can be used to define either `root` or the `SVGElement`. The latter can also be defined with the second callback ref.
+
+Using both callbacks is usefull to listen for `mousemove` events in an ancestor `Element` different than `document`, but note that `Position` will always be computed relative to `document`.
 
 **Note:** the `SVGElement` should preserve its aspect ratio, otherwise `Position` will be incorrect, as the current implementation is using `Element.getBoundingClientRect()` to compute its dimensions.
 
 **Configuration:**
 
-- `root` (default to `document`) is a reference of the `HTMLElement` or the `SVGElement` to listen `mousemove` events on
-- `target` (default to `root`) is a reference of the `SVGElement` to use to translate the mouse position
 - `thresold` (default to `1`) is an optional number to "expand" or "shrink" the `target` box layout area, ie. its [`DOMRect`](https://developer.mozilla.org/en-US/docs/Web/API/DOMRect)
 - `inital` (default to `{ x: 0, y: 0 }`) is an optional initial position
 - `shouldListen` (default to `true`) is an optional `Boolean` to "mute" the `mousemove` event listener while it's `false`
