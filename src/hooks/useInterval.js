@@ -2,7 +2,7 @@
 import React from 'react'
 
 /**
- * useInterval :: (x -> void) -> Number -> void
+ * useInterval :: ((x -> void) -> Number) -> void
  *
  * Credit: Dan Abramov
  * https://overreacted.io/making-setinterval-declarative-with-react-hooks/
