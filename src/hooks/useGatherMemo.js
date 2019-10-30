@@ -3,7 +3,7 @@ import React from 'react'
 import shallowEqual from '../lib/shallowEqual'
 
 /**
- * useGatherMemo :: [Object, ...String|Symbol] -> [a, Object]
+ * useGatherMemo :: (Object -> ...String|Symbol) -> [a, Object]
  */
 const useGatherMemo = (object, ...props) => {
 
