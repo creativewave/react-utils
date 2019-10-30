@@ -5,6 +5,7 @@ This package contains common hooks and components to use in a React application.
 
 **Hooks**
 
+- [`useAnimate`](#useAnimate)
 - [`useIntersectionObserver`](#useIntersectionObserver)
 - [`useInterval`](#useInterval)
 - [`useGatherMemo`](#useGatherMemo)
@@ -23,6 +24,34 @@ This package contains common hooks and components to use in a React application.
 ***
 
 **(Hooks)**
+
+## useAnimate
+
+`useAnimate` abstracts using `Element.animate()`, provided by the Web Animation API ([MDN](https://developer.mozilla.org/en-US/docs/Web/API/Web_Animations_API)), and cancels an animation if it's still running when the component unmouts.
+
+`useAnimate :: (Element -> Options?) -> [Animate, Animation]`
+
+`Animate` is a `Function` that has the following signature: `Animate :: (Keyframes -> Options) -> Animation`.
+
+It will return an `Animation` extended with `.then()`, to chain another animation or just execute a simple callback when the previous animation is finished.
+
+`Animation` [(W3C)](https://drafts.csswg.org/web-animations/#the-animation-interface) will be updated each time `animate()` is called.
+
+**Example:**
+
+```js
+    const ref = React.useRef()
+    const [animate, animation] = useAnimate(ref.current)
+
+    const onHover = () => animate(
+        // Animate color from red to green in 2s
+        { color: ['red', 'green'] },
+        { duration: 2000, fill: 'forwards' })
+            .then(() => animation.reverse())
+            // Then animate back to red in 2s
+
+    return <h1 ref={ref}>red -> green -> orange -> green</h1>
+```
 
 ## useIntersectionObserver
 
