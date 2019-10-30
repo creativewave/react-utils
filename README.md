@@ -110,7 +110,7 @@ Depending on the scroll direction, it prevents the native scroll event and scrol
 
 It also abstracts using `IntersectionObserver` to execute a `Function` when an `Element` enters in or exits from an ancestor `Element`. `IntersectionObserver` is also used to set the previous/next `Element` to scroll into view when the `Element` scrolled into view enters in its ancestor's viewport.
 
-`useScrollIntoView :: Configuration -> IntersectionObserverOptions -> void`
+`useScrollIntoView :: Configuration -> void`
 
 **Configuration:**
 
@@ -120,12 +120,7 @@ It also abstracts using `IntersectionObserver` to execute a `Function` when an `
 - `delay` (default to `200` ms) is a timeout value before scrolling
 - `wait` (default to `1000` ms) is a timeout value between two authorized scroll events
 - `mode` (default to `auto`) is the [scrolling behavior](https://drafts.csswg.org/cssom-view/#smooth-scrolling)
-
-**IntersectionObserverOptions:**
-
-See [`useIntersectionObserver`](#useIntersectionObserver).
-
-Juste note that touch/wheel events will be registered on the `HTMLElement` defined with `root` in `Configuration`.
+- `onEnter` and `onExit` are optional callbacks defined in [`useIntersectionObserver`](#useIntersectionObserver)
 
 ## useSVGMousePosition
 
