@@ -2,7 +2,7 @@
 import React from 'react'
 
 /**
- * useTimeout :: (Number -> void) -> Number -> void
+ * useTimeout :: ((Number -> void) -> Number) -> void
  */
 const useTimeout = (fn, delay) => {
 
