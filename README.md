@@ -110,12 +110,14 @@ Depending on the scroll direction, it prevents the native scroll event and scrol
 
 It also abstracts using `IntersectionObserver` to execute a `Function` when an `Element` enters in or exits from an ancestor `Element`. `IntersectionObserver` is also used to set the previous/next `Element` to scroll into view when the `Element` scrolled into view enters in its ancestor's viewport.
 
-`useScrollIntoView :: Configuration -> void`
+`useScrollIntoView :: Configuration -> [CallbackRef, CallbackRef]`
+
+The first [`CallbackRef`](https://reactjs.org/docs/refs-and-the-dom.html#callback-refs) should be used to define `root`, ie. the ancestor `Element` that contains target `Element`s to scroll into view, defined using the second callback ref.
+
+Both should be used, either as as a `ref` property in the corresponding component, or executed directly with a reference to the corresponding `Element`. `root` will be `document` when it's set to `null`. You shouldn't worry about its execution on each update of the component, or when it unmounts.
 
 **Configuration:**
 
-- `targets` (required) is a collection of `Element`s to scroll into view
-- `root` (default to the document/viewport) is a reference of an optional container `Element`
 - `beforeScroll` is an optional callback executed before scrolling, which can be used to set the `Element` to scroll into view (by returning its index value in `targets`) or eg. to set a CSS transition classname before scrolling, and receiving as arguments (1) the index of the target that will be scrolled into view, (2) the current target index and (3) the scrolling direction  (`up` or `down`)
 - `delay` (default to `200` ms) is a timeout value before scrolling
 - `wait` (default to `1000` ms) is a timeout value between two authorized scroll events
