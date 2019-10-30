@@ -2,15 +2,18 @@
 import React from 'react'
 import log from '../lib/log'
 import noop from '../lib/noop'
+import { universalDocument } from '../lib/universal'
 
-class ObserversCache {
+let DEBUG
+
+class IntersectionObserversCache {
 
     constructor() {
         this.observers = []
     }
 
     /**
-     * get :: IntersectionObserverOptions -> Observer
+     * get :: IntersectionObserverOptions -> IntersectionObserver
      */
     get(options) {
         const [observer] = this.observers.find(([, observerOptions]) =>
@@ -22,7 +25,7 @@ class ObserversCache {
     }
 
     /**
-     * set :: (Entries -> Observer -> void) -> IntersectionObserverOptions -> Observer
+     * set :: ((Entries -> IntersectionObserver -> void) -> IntersectionObserverOptions) -> IntersectionObserver
      */
     set(callback, options) {
         // eslint-disable-next-line compat/compat
@@ -31,45 +34,40 @@ class ObserversCache {
         return observer
     }
 }
-const observers = new ObserversCache()
-const callbacks = new Map()
-
-let DEBUG
+const observers = new IntersectionObserversCache()
 
 /**
- * handleIntersection :: ([Element] -> IntersectionObserver) -> void
+ * handleIntersection :: (Targets -> Callbacks) -> ([Element] -> IntersectionObserver) -> void
+ *
+ * Targets => { current: [Element] }
+ * Callbacks => {
+ *   onEnter?: (Entry -> IntersectionObserver) -> void,
+ *   onExit?: (Entry -> IntersectionObserver) -> void,
+ *   once?: Boolean,
+ * }
  */
-const handleIntersection = (entries, observer) =>
+const handleIntersection = (targets, { onEnter, onExit, once }) => (entries, observer) =>
     entries.forEach(entry => {
         log('[use-intersection-observer]', DEBUG, entry, observer)
-        callbacks.set(
-            entry.target,
-            callbacks
-                .get(entry.target)
-                .filter(({ onEnter, onExit, once }) => {
-                    if (entry.isIntersecting) {
-                        onEnter(entry, observer)
-                        if (once) {
-                            observer.unobserve(entry.target)
-                            return false
-                        }
-                    } else {
-                        onExit(entry, observer)
-                    }
-                    return true
-                }))
+        if (entry.isIntersecting) {
+            onEnter(entry, observer)
+            if (once) {
+                observer.unobserve(entry.target)
+                targets.current = targets.current.filter(([target]) => target !== entry.target)
+            }
+        } else {
+            onExit(entry, observer)
+        }
     })
 
 /**
- * useIntersectionObserver :: Configuration -> void
+ * useIntersectionObserver :: Configuration -> [Element|null -> void, Element|null -> void]
  *
  * Configuration => {
  *   onEnter?: (Entry -> IntersectionObserver) -> void,
  *   onExit?: (Entry -> IntersectionObserver) -> void,
  *   once?: Boolean,
- *   root?: Element,
  *   rootMargin?: String,
- *   targets?: [Element],
  *   threshold?: Number,
  * }
  *
@@ -78,14 +76,9 @@ const handleIntersection = (entries, observer) =>
  *
  * It should use a single callback for all observer instances.
  *
- * It should register and execute either the `onEnter` or `onExit` callback
- * associated to each intersecting `HTMLElement`.
- *
  * It should unobserve a target element before the component unmouts.
  *
- * Memo: the observer is not automatically `disconnect`ed when it has no more
- * `targets` to observe, for performance reasons, as in most cases, there will
- * be just a few observers, which could be kept in memory.
+ * It should disconnect before the root component unmounts.
  *
  * Memo: the observer will trigger `onEnter` or `onExit` after root did mount.
  *
@@ -99,38 +92,59 @@ const useIntersectionObserver = ({
     onEnter = noop,
     onExit = noop,
     once = false,
-    root = null,
     rootMargin = '0px',
-    targets = [],
     threshold = 0,
 } = {}) => {
 
     DEBUG = debug
 
-    React.useEffect(() => {
+    const root = React.useRef()
+    const targets = React.useRef([])
+    const setRoot = React.useCallback(
+        node => {
 
-        if (!targets.length) return
-        if (root !== null && typeof root !== 'object') return
+            const options = { root: root.current, rootMargin, threshold }
 
-        const options = { root, rootMargin, threshold }
-        const observer = observers.get(options) || observers.set(handleIntersection, options)
+            if (node === null && typeof root.current !== 'undefined') {
 
-        targets.forEach(target => {
-            callbacks.set(target, (callbacks.get(target) || []).concat({ onEnter, onExit, once }))
-            observer.observe(target)
-        })
+                observers.get(options).disconnect()
+                targets.current = []
+                root.current = undefined
 
-        return () => targets.forEach(ref => {
-            observer.unobserve(ref)
-            callbacks.set(
-                ref,
-                callbacks.get(ref).filter(params => !(
-                    onEnter === params.onEnter
-                    && onExit === params.onExit
-                    && once === params.once)))
-        })
+                return
+            } else if (node === root.current) {
+                return
+            } else if (targets.current.length === 0) {
+                return
+            }
+            root.current = node || universalDocument
 
-    }, [onEnter, onExit, once, root, rootMargin, targets, threshold])
+            const observer = observers.get(options)
+                || observers.set(handleIntersection(targets, { onEnter, onExit, once }), options)
+
+            targets.current.forEach(([target]) => observer.observe(target))
+        },
+        [onEnter, onExit, once, root, rootMargin, targets, threshold])
+    const setTarget = React.useCallback(
+        id => node => {
+            if (node === null) {
+                targets.current = targets.current.filter(([node, nodeId]) => {
+                    if (nodeId !== id) {
+                        return false
+                    }
+                    const observer = observers.get({ root: root.current, rootMargin, threshold })
+                    if (observer) {
+                        observer.unobserve(node)
+                    }
+                    return true
+                })
+                return
+            }
+            targets.current.push([node, id])
+        },
+        [root, rootMargin, targets, threshold])
+
+    return [setRoot, setTarget]
 }
 
 export default useIntersectionObserver
