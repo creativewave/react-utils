@@ -1,26 +1,38 @@
 
 import React from 'react'
+import noop from '../lib/noop'
 import { universalDocument } from '../lib/universal'
 
 const defaultPosition = { x: 0, y: 0 }
 
 /**
- * useMousePosition :: Configuration -> { x: Float, y: Float, event: Event }
+ * useSVGMousePosition :: Configuration -> Position
  *
- * It should avoid reflows in the same render cycle, by reading related values
- * in a callback given to `requestAnimationFrame`, whose execution should be
- * guarded until the callback is completed to prevent forced synchronous layout.
+ * Position => { x: Float, y: Float }
+ * Configuration => {
+ *   initial: Position,
+ *   isFixed?: Boolean,
+ *   precision?: Number,
+ *   root?: Element|SVGElement|null,
+ *   shouldListen?: Boolean,
+ *   target?: SVGElement|null,
+ *   thresold?: Number,
+ * }
+ *
+ * It should avoid multiple reflows in the same render cycle, by reading values
+ * in a callback given to `requestAnimationFrame()`, whose execution should be
+ * guarded until its callback is run, to prevent forced synchronous layout.
  *
  * It should listen for `mousemove` events in `root`, which should default to
- * the `document`, in order to get mouse positions relative to `target`, which
- * should default to `root`, in order to listen mouse events only on over.
+ * `document` if `root` is null, over the given `target`, which should default
+ * to `root` if `target` is null.
  *
- * It should use a `thresold` property to expand/shrink the `target` area over
- * which it should receive `mousemove` events.
+ * It should use a `thresold` to expand/shrink the `target` area over which it
+ * should receive `mousemove` events.
  *
- * Memos: compare performances of `SVG.createPoint()` and `SVG.getScreenCTM()`
- * versus `Element.getBoundingClientRect()`, to translate a DOM position into an
- * SVG position.
+ * TODO: compare performances of `SVG.createPoint()` and `SVG.getScreenCTM()` vs
+ * `Element.getBoundingClientRect()`, to translate a DOM position into an SVG
+ * position.
  * https://codepen.io/creative-wave/pen/pozLPrg
  * https://codepen.io/creative-wave/pen/pozVJL
  */
