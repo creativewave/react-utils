@@ -30,7 +30,48 @@ const getScrollDirection = (event, previousTouch = {}) => {
 }
 
 /**
- * useScrollIntoView :: Configuration -> void
+ * addListeners :: (Element -> [Element] -> (Event -> Boolean) -> { current: Boolean })
+ *              -> (void -> void)
+ */
+const addListeners = (viewPort, targets, onScroll, isScrolling) => {
+
+    if (!(viewPort && targets.length)) return
+
+    let cancelTimers
+    let firstTouch
+    let isPointerDown
+    const onWheel = event => {
+        if (isScrolling.current) return
+        cancelTimers = onScroll(event, firstTouch)
+        if ((isPointerDown && event.type !== 'touchmove') || !cancelTimers) return
+        // Disable native scroll action
+        // https://stackoverflow.com/questions/4770025/how-to-disable-scrolling-temporarily
+        event.preventDefault()
+        // TODO: check if it's really required.
+        event.returnValue = false
+    }
+    const onPointerDown = () => isPointerDown = true
+    const onPointerUp = () => isPointerDown = false
+    const onTouchStart = event => firstTouch = { x: event.touches[0].clientX, y: event.touches[0].clientY }
+
+    viewPort.addEventListener('pointerdown', onPointerDown)
+    viewPort.addEventListener('pointerup', onPointerUp)
+    viewPort.addEventListener('touchstart', onTouchStart)
+    viewPort.addEventListener('touchmove', onWheel, { passive: false })
+    viewPort.addEventListener('wheel', onWheel, { passive: false })
+
+    return () => {
+        cancelTimers && cancelTimers()
+        viewPort.removeEventListener('pointerdown', onPointerDown)
+        viewPort.removeEventListener('pointerup', onPointerUp)
+        viewPort.removeEventListener('touchstart', onTouchStart)
+        viewPort.removeEventListener('touchmove', onWheel, { passive: false })
+        viewPort.removeEventListener('wheel', onWheel, { passive: false })
+    }
+}
+
+/**
+ * useScrollIntoView :: Configuration -> [Element|null -> void, Element|null -> void]
  *
  * Configuration => {
  *   beforeScroll?: (Number -> Number -> String) -> Number|void,
@@ -74,17 +115,72 @@ const useScrollIntoView = ({
     mode = 'smooth',
     onEnter = noop,
     onExit,
-    root = null,
     rootMargin,
-    targets = [],
     threshold = 1,
     wait = 1000,
 } = {}) => {
 
-    const viewPort = React.useMemo(() => root === null ? universalDocument : root.current, [root])
-    const target = React.useRef(-1)
-    const setTarget = React.useCallback(index => target.current = index, [])
+    const root = React.useRef()
+    const targets = React.useRef([])
+    const cleanup = React.useRef(noop)
     const isScrolling = React.useRef(false)
+
+    const target = React.useRef(-1)
+    const setCurrentTarget = React.useCallback(index => target.current = index, [])
+    const handleEnter = React.useCallback(
+        entry => {
+            setCurrentTarget(targets.current.findIndex(([, node]) => node === entry.target))
+            onEnter(entry)
+        },
+        [onEnter, setCurrentTarget, targets])
+
+    const [setOberverRootRef, setObserverTargetRef] = useIntersectionObserver({
+        debug,
+        onEnter: handleEnter,
+        onExit,
+        rootMargin,
+        threshold,
+    })
+
+    const setRoot = React.useCallback(
+        node => {
+
+            if (node === null && typeof root.current !== 'undefined') {
+
+                cleanup.current()
+                targets.current = []
+                root.current = undefined
+
+                return
+            }
+
+            root.current = node || universalDocument
+            setOberverRootRef(node)
+
+            if (targets.current.length === 0) {
+                return
+            }
+
+            cleanup.current = addListeners(
+                root.current,
+                targets.current.map(([, node]) => node),
+                onScroll,
+                isScrolling)
+
+            return
+        },
+        [isScrolling, onScroll, root, setOberverRootRef, targets])
+    const setTarget = React.useCallback(
+        id => node => {
+            setObserverTargetRef(id)(node)
+            if (node === null) {
+                targets.current = targets.current.filter(([nodeId]) => nodeId !== id)
+                return
+            }
+            targets.current.push([id, node])
+        },
+        [setObserverTargetRef, targets])
+
     const onScroll = React.useCallback(
         (event, firstTouch) => {
 
@@ -94,7 +190,9 @@ const useScrollIntoView = ({
 
             const nextIndex = direction === 'down' ? target.current + 1 : target.current - 1
             const userNextIndex = beforeScroll(nextIndex, target.current, direction)
-            const scrollTarget = targets[userNextIndex] || targets[nextIndex]
+            const scrollTarget =
+                (targets.current[userNextIndex] && targets.current[userNextIndex][1])
+                || (targets.current[nextIndex] && targets.current[nextIndex][1])
 
             log('[use-scroll-into-view]', debug, {
                 currentIndex: target.current,
@@ -108,14 +206,14 @@ const useScrollIntoView = ({
             if (!scrollTarget) {
 
                 const {
-                    clientHeight = viewPort.body.clientHeight,
-                    scrollTop = viewPort.body.scrollTop,
-                } = viewPort
+                    clientHeight = root.current.body.clientHeight,
+                    scrollTop = root.current.body.scrollTop,
+                } = root.current
 
                 if (direction === 'up' && scrollTop === 0) return
                 if (direction === 'down' && scrollTop === clientHeight) return
 
-                setTarget(direction === 'down' ? targets.length : -1)
+                setCurrentTarget(direction === 'down' ? targets.current.length : -1)
 
                 return
             }
@@ -128,51 +226,9 @@ const useScrollIntoView = ({
                 clearTimeout(throttleTimerId)
             }
         },
-        [beforeScroll, debug, delay, isScrolling, mode, setTarget, target, targets, viewPort, wait])
-    const handleEnter = React.useCallback(
-        entry => {
-            setTarget(targets.indexOf(entry.target))
-            onEnter(entry)
-        },
-        [onEnter, setTarget, targets])
+        [beforeScroll, debug, delay, isScrolling, mode, root, setCurrentTarget, target, targets, wait])
 
-    useIntersectionObserver({ debug, onEnter: handleEnter, onExit, root, rootMargin, targets, threshold })
-    React.useEffect(() => {
-
-        if (!(viewPort && targets.length)) return
-
-        let cancel
-        let firstTouch
-        let isPointerDown
-        const onWheel = event => {
-            if (isScrolling.current) return
-            cancel = onScroll(event, firstTouch)
-            if ((isPointerDown && event.type !== 'touchmove') || !cancel) return
-            // Disable native scroll action
-            // https://stackoverflow.com/questions/4770025/how-to-disable-scrolling-temporarily
-            event.preventDefault()
-            // TODO: check if it's really required.
-            event.returnValue = false
-        }
-        const onPointerDown = () => isPointerDown = true
-        const onPointerUp = () => isPointerDown = false
-        const onTouchStart = event => firstTouch = { x: event.touches[0].clientX, y: event.touches[0].clientY }
-
-        viewPort.addEventListener('pointerdown', onPointerDown)
-        viewPort.addEventListener('pointerup', onPointerUp)
-        viewPort.addEventListener('touchstart', onTouchStart)
-        viewPort.addEventListener('touchmove', onWheel, { passive: false })
-        viewPort.addEventListener('wheel', onWheel, { passive: false })
-
-        return () => {
-            cancel && cancel()
-            viewPort.removeEventListener('pointerdown', onPointerDown)
-            viewPort.removeEventListener('pointerup', onPointerUp)
-            viewPort.removeEventListener('touchstart', onTouchStart)
-            viewPort.removeEventListener('touchmove', onWheel, { passive: false })
-            viewPort.removeEventListener('wheel', onWheel, { passive: false })
-        }
-    }, [onScroll, targets, viewPort])
+    return [setRoot, setTarget]
 }
 
 export default useScrollIntoView
