@@ -6,16 +6,18 @@ import { universalDocument } from '../lib/universal'
 const defaultPosition = { x: 0, y: 0 }
 
 /**
- * useSVGMousePosition :: Configuration -> Position
+ * useSVGMousePosition :: Configuration -> [
+ *   Position,
+ *   Element|null -> void,
+ *   SVGElement|null -> void
+ * ]
  *
  * Position => { x: Float, y: Float }
  * Configuration => {
  *   initial: Position,
  *   isFixed?: Boolean,
  *   precision?: Number,
- *   root?: Element|SVGElement|null,
  *   shouldListen?: Boolean,
- *   target?: SVGElement|null,
  *   thresold?: Number,
  * }
  *
@@ -39,23 +41,26 @@ const defaultPosition = { x: 0, y: 0 }
 const useSVGMousePosition = ({
     initial = defaultPosition,
     isFixed = false,
-    root = universalDocument,
     precision = 2,
     shouldListen = true,
-    target = root,
     thresold = 1,
 } = {}) => {
 
     const [position, setPosition] = React.useState(initial)
+
+    const root = React.useRef()
+    const target = React.useRef()
+    const cleanup = React.useRef(noop)
     const timerId = React.useRef()
-    const hasSubArea = React.useMemo(() => target !== root || thresold !== 1, [target, thresold, root])
+
+    const hasSubArea = React.useMemo(() => target.current !== root.current || thresold !== 1, [target, thresold, root])
     const onMouseMove = React.useCallback(
         ({ clientX, clientY }) => {
 
-            const rect = target.getBoundingClientRect()
+            const rect = target.current.getBoundingClientRect()
             const { x, y } = isFixed
-                ? { x: rect.x - window.scrollX, y: rect.y - window.scrollY }
-                : { x: rect.x, y: rect.y }
+                ? { x: rect.x, y: rect.y }
+                : { x: rect.x - window.scrollX, y: rect.y - window.scrollY }
 
             if (hasSubArea && (
                 (clientX * thresold) < x
@@ -66,7 +71,7 @@ const useSVGMousePosition = ({
                 return timerId.current = null
             }
 
-            const [,, viewBoxWidth, viewBoxHeight] = target.getAttribute('viewBox').split(' ')
+            const [,, viewBoxWidth, viewBoxHeight] = target.current.getAttribute('viewBox').split(' ')
 
             setPosition({
                 x: ((clientX - x) / rect.width * viewBoxWidth).toFixed(precision),
@@ -76,25 +81,54 @@ const useSVGMousePosition = ({
         },
         [hasSubArea, isFixed, precision, setPosition, target, thresold, timerId])
 
-    React.useEffect(
-        () => {
+    const setRoot = React.useCallback(
+        node => {
 
-            if (!(shouldListen && root && target)) return
+            if (node === null && typeof root.current !== 'undefined') {
+
+                cleanup.current()
+                target.current = undefined
+                root.current = undefined
+
+                return
+            }
+            root.current = node || universalDocument
+
+            if (!target.current) {
+                target.current = root.current
+            }
+
+            if (!(shouldListen && root.current && target.current)) {
+                return
+            }
 
             const onMove = event => {
-                if (timerId.current) return
+                if (timerId.current) {
+                    return
+                }
                 timerId.current = requestAnimationFrame(() => onMouseMove(event))
             }
-            root.addEventListener('mousemove', onMove)
-
-            return () => {
+            root.current.addEventListener('mousemove', onMove)
+            cleanup.current = () => {
                 timerId.current && cancelAnimationFrame(timerId.current)
-                root.removeEventListener('mousemove', onMove)
+                root.current.removeEventListener('mousemove', onMove)
             }
         },
-        [onMouseMove, target, shouldListen, timerId, root])
+        [cleanup, onMouseMove, root, shouldListen, target, timerId])
+    const setTarget = React.useCallback(
+        node => {
+            if (node === null) {
+                if (node !== target.current) {
+                    cleanup.current()
+                }
+                target.current = undefined
+                return
+            }
+            target.current = node
+        },
+        [cleanup, target])
 
-    return position
+    return [position, setRoot, setTarget]
 }
 
 export default useSVGMousePosition
