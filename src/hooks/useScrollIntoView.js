@@ -30,17 +30,15 @@ const getScrollDirection = (event, previousTouch = {}) => {
 }
 
 /**
- * useScrollIntoView :: Configuration -> IntersectionObserverConfiguration -> void
+ * useScrollIntoView :: Configuration -> void
  *
  * Configuration => {
  *   beforeScroll?: (Number -> Number -> String) -> Number|void,
  *   delay?: Number,
  *   mode?: String,
- *   wait?: Number,
- * }
- * IntersectionObserverConfiguration => {
  *   onEnter?: (Entry -> Observer) -> void,
  *   onExit?: (Entry -> Observer) -> void,
+ *   wait?: Number,
  * }
  *
  * It should prevent scrolling an `Element` into view on `pointerdown`, ie. when
@@ -69,10 +67,19 @@ const getScrollDirection = (event, previousTouch = {}) => {
  * `|-1  0 1 2 3  4|`, where -1 and 4 represents a state without a target in
  * view, and 0 to 3 represent the state of the current target index in view.
  */
-const useScrollIntoView = (
-    { debug, beforeScroll = noop, delay = 200, mode = 'smooth', targets = [], wait = 1000 } = {},
-    { onEnter = noop, onExit, root = null, rootMargin, threshold = 1 } = {},
-) => {
+const useScrollIntoView = ({
+    debug,
+    beforeScroll = noop,
+    delay = 200,
+    mode = 'smooth',
+    onEnter = noop,
+    onExit,
+    root = null,
+    rootMargin,
+    targets = [],
+    threshold = 1,
+    wait = 1000,
+} = {}) => {
 
     const viewPort = React.useMemo(() => root === null ? universalDocument : root.current, [root])
     const target = React.useRef(-1)
