@@ -37,7 +37,7 @@ const callbacks = new Map()
 let DEBUG
 
 /**
- * handleIntersection :: [HTMLElement] -> Observer -> void
+ * handleIntersection :: ([Element] -> IntersectionObserver) -> void
  */
 const handleIntersection = (entries, observer) =>
     entries.forEach(entry => {
@@ -61,16 +61,16 @@ const handleIntersection = (entries, observer) =>
     })
 
 /**
- * useIntersectionObserver :: Options -> void
+ * useIntersectionObserver :: Configuration -> void
  *
- * Options => {
- *   once: Boolean,
- *   onEnter?: (Entry -> Observer) -> void,
- *   onExit?: (Entry -> Observer) -> void,
- *   root?: HTMLElement,
+ * Configuration => {
+ *   onEnter?: (Entry -> IntersectionObserver) -> void,
+ *   onExit?: (Entry -> IntersectionObserver) -> void,
+ *   once?: Boolean,
+ *   root?: Element,
  *   rootMargin?: String,
- *   targets?: [HTMLElement],
- *   threshold?: Number|Float,
+ *   targets?: [Element],
+ *   threshold?: Number,
  * }
  *
  * It should use a single observer instance per unique set of options given as
@@ -81,13 +81,13 @@ const handleIntersection = (entries, observer) =>
  * It should register and execute either the `onEnter` or `onExit` callback
  * associated to each intersecting `HTMLElement`.
  *
- * It should `unobserve` the given `HTMLElement`s when component unmouts.
+ * It should unobserve a target element before the component unmouts.
  *
  * Memo: the observer is not automatically `disconnect`ed when it has no more
  * `targets` to observe, for performance reasons, as in most cases, there will
  * be just a few observers, which could be kept in memory.
  *
- * Memo: the observer will trigger `onEnter` or `onExit` after `observe`.
+ * Memo: the observer will trigger `onEnter` or `onExit` after root did mount.
  *
  * TODO: prevent executing `onExit` on load.
  * TODO: return the observer to manually `unobserve` or `disconnect`.
