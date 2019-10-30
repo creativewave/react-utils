@@ -2,7 +2,7 @@
 import React from 'react'
 
 /**
- * useLazyStateUpdate :: a -> Number -> a
+ * useLazyStateUpdate :: (a -> Number?) -> a
  */
 const useLazyStateUpdate = (initialState, delay = 100) => {
 
