@@ -26,38 +26,41 @@ This package contains common hooks and components to use in a React application.
 
 ## useIntersectionObserver
 
-`useIntersectionObserver` abstracts using an `IntersectionObserver` to execute a function when a DOM element intersects a parent element.
+`useIntersectionObserver` abstracts using an `IntersectionObserver` to execute a function when an `Element` intersects an ancestor, ie. when it enters in or exit from its ancestor's viewport.
 
 `useIntersectionObserver :: Configuration -> void`
 
 **Configuration:**
 
-- `targets` (required) are references of `HTMLElement`s to observe
+- `targets` (required) are references to `Element`s to observe
 - `root`, `rootMargin`, and `threshold` are `IntersectionObserver` options ([MDN](https://developer.mozilla.org/en-US/docs/Web/API/IntersectionObserver/IntersectionObserver#Parameters))
-- `onEnter` and `onExit` are optional callbacks executed with the arguments received from the `IntersectionObserver` callback, when an `HTMLElement` is intersecting or stops intersecting
-- `once` is an optional `Boolean` to `unobserve` an `HTMLElement` after its first intersection
+- `onEnter` and `onExit` are optional callbacks executed with the arguments received from the `IntersectionObserver` callback when an `Element` enters in or exits from its ancestor's viewport
+- `once` is an optional `Boolean` to unobserve an `Element` after its first entrance
 
-**Note:** make sure to use static/memoized functions for `onEnter`/`onExit`, otherwise they will trigger an observe/unobserve effect/cleanup on each update.
+**Note:** make sure to assign static/memoized functions to `onEnter()`/`onExit()`, otherwise observe/unobserve effect/cleanup will run on each update of the component that uses this hook.
 
-A single observer will be created for each unique set of intersection options (`root`, `rootMargin`, and `threshold`), and each observed element is automatically `unobserve`d before unmounting or (opt-in) after its first intersection.
+A single observer is created for each unique set of intersection options, and each observed `Element` will be automatically unobserved before unmounting or (opt-in) after its first entrance.
 
 ## useInterval
 
 *Credit: [Dan Abramov](https://overreacted.io/making-setinterval-declarative-with-react-hooks/).*
 
-`useInterval` abstracts using `setInterval` and `clearInterval` to schedule and repeat the execution of a function over time, without worrying about cancelling the timer and avoiding a memory leak such as *a React state update on an unmounted component*.
+`useInterval` abstracts using `setInterval()` and `clearInterval()` to schedule and repeat the execution of a function over time, without worrying about cancelling the timer to avoid a memory leak such as *a React state update on an unmounted component*.
 
 `useInterval :: [Function, Number] -> void`
 
-It will stop repeating the execution of the function if the component unmounts, or if the reference of the function or its delay has changed.
+It will stop executing `Function` if:
+- the component unmounts
+- the reference to `Function` has changed
+- the delay (`Number`) has changed
 
 ## useGatherMemo
 
 `useGatherMemo` abstracts merging, gathering, and/or picking properties from object(s), and memoizing the result, ie. by preserving reference(s).
 
-It's a low level hook which can be usefull eg. when you want to merge options or props received in a hook or a component, with a large default options object, instead of listing each option argument with a default value, and/or listing each one as a dependency of a hook (which should react to an update).
+It's a low level hook that can be usefull eg. when you want to merge options or props received in a hook or a component with a large default options object, instead of listing each option argument with a default value and/or listing each one as dependencies of a hook.
 
-`useGatherMemo :: [Object, ...String|Symbol] -> [a, Object]`
+`useGatherMemo :: (Object -> ...String|Symbol) -> [a, Object]`
 
 **Example:**
 
@@ -84,15 +87,15 @@ It's a low level hook which can be usefull eg. when you want to merge options or
 
 `useLazyStateUpdate` abstracts delaying a state update.
 
-Give it a state value that will be updated over time, and a delay (default to `100` ms), and it will return the corresponding state by delaying future updates.
+Give it a state value and a delay (default to `100` ms) and it will update the component and return the corresponding state when `delay` is over.
 
-It could be used eg. to delay the display of an error message coming from the validation of an input value updated on each change.
+It could be used eg. to delay the render of an error notice after validating an input value updated on each user input.
 
 `useLazyStateUpdate :: [a, Number] -> a`
 
 ## useMediaQuery
 
-`useMediaQuery` abstracts using `windows.matchMedia` to observe a match against a query, eg. `(min-width: 50em)`.
+`useMediaQuery` abstracts using `windows.matchMedia()` to observe a match against a query, eg. `(min-width: 50em)`.
 
 `useMediaQuery :: String -> Boolean`
 
@@ -100,17 +103,17 @@ It could be used eg. to delay the display of an error message coming from the va
 
 `useScrollIntoView` abstracts using `Element.scrollIntoView()` when a `scroll` event is emitted.
 
-By default, depending on the scroll direction, either it prevents the default event and scroll into view the next or previous element from a given collection of `HTMLElement`s, or the container element is normally scrolled by the user agent.
+Depending on the scroll direction, it prevents the native scroll event and scrolls into view the next or previous `Element` of the given collection.
 
-It also abstracts using `IntersectionObserver` to execute a function when an element intersects its container, ie. when it enters in or exits from its viewport.
+It also abstracts using `IntersectionObserver` to execute a `Function` when an `Element` enters in or exits from an ancestor `Element`. `IntersectionObserver` is also used to set the previous/next `Element` to scroll into view when the `Element` scrolled into view enters in its ancestor's viewport.
 
 `useScrollIntoView :: Configuration -> IntersectionObserverOptions -> void`
 
 **Configuration:**
 
-- `targets` (required) is a collection of `HTMLElement`s to scroll into view
-- `root` (default to the document/viewport) is a reference of an optional container element
-- `beforeScroll` is an optional callback which could be used eg. to set a CSS transition classname before scrolling, or to set the element to scroll into view by returning its index value, and which receive as arguments (1) the index of the target that will be scrolled into view, (2) the current target index and (3) the scrolling direction  (`up` or `down`)
+- `targets` (required) is a collection of `Element`s to scroll into view
+- `root` (default to the document/viewport) is a reference of an optional container `Element`
+- `beforeScroll` is an optional callback executed before scrolling, which can be used to set the `Element` to scroll into view (by returning its index value in `targets`) or eg. to set a CSS transition classname before scrolling, and receiving as arguments (1) the index of the target that will be scrolled into view, (2) the current target index and (3) the scrolling direction  (`up` or `down`)
 - `delay` (default to `200` ms) is a timeout value before scrolling
 - `wait` (default to `1000` ms) is a timeout value between two authorized scroll events
 - `mode` (default to `auto`) is the [scrolling behavior](https://drafts.csswg.org/cssom-view/#smooth-scrolling)
@@ -123,45 +126,50 @@ Juste note that touch/wheel events will be registered on the `HTMLElement` defin
 
 ## useSVGMousePosition
 
-`useSVGMousePosition` abstracts translating the mouse position relative to the viewport of the document (`window`), into a position relative to the viewbox of an `<svg>` element, when a `mousemove` event is emitted.
+`useSVGMousePosition` abstracts translating the position of the mouse relative to an `SVGElement` in `document`, into a position relative to its `viewBox`.
 
-It could be used eg. to change the position of an SVG element (shapes, filters, clips, masks, gradients, etc...) when hovering the `<svg>`.
+It could be used eg. to change the position of a child `SVGElement` (paths, filters, clips, masks, gradients, etc...) when hovering its root `SVGElement`.
 
-`useSVGMousePosition :: Configuration -> { x: Float, y: Float }`
+`useSVGMousePosition :: Configuration -> Position`
 
-**Note:** the `<svg>` should preserve its aspect ratio, otherwise the position will be incorrect, as the current implementation is using `Element.getBoundingClientRect()` to get its dimensions.
+`Position` represents the coordinates of the mouse in the `SVGElement`, relative to its `viewBox`: `Position => { x: Float, y: Float }`.
+
+**Note:** the `SVGElement` should preserve its aspect ratio, otherwise `Position` will be incorrect, as the current implementation is using `Element.getBoundingClientRect()` to compute its dimensions.
 
 **Configuration:**
 
 - `root` (default to `document`) is a reference of the `HTMLElement` or the `SVGElement` to listen `mousemove` events on
 - `target` (default to `root`) is a reference of the `SVGElement` to use to translate the mouse position
-- `thresold` (default to `1`) is an optional number to "expand" or "shrink" the `target` box layout, ie. its [`DOMRect`](https://developer.mozilla.org/en-US/docs/Web/API/DOMRect), over which a `mousemove` event should update the mouse position
+- `thresold` (default to `1`) is an optional number to "expand" or "shrink" the `target` box layout area, ie. its [`DOMRect`](https://developer.mozilla.org/en-US/docs/Web/API/DOMRect)
 - `inital` (default to `{ x: 0, y: 0 }`) is an optional initial position
-- `shouldListen` (default to `true`) is an optional `Boolean` to dynamically add/remove the `mousemove` event listener
+- `shouldListen` (default to `true`) is an optional `Boolean` to "mute" the `mousemove` event listener while it's `false`
 - `isFixed` (default to `false`) is an optional `Boolean` to flag the `target` as having a fixed position
-- `precision` (default to `2`) is an optional decimals number to round the mouse position
+- `precision` (default to `2`) is an optional number to round `Position` values
 
 ## useTimeout
 
-`useTimeout` abstracts using `setTimeout` and `clearTimeout` to schedule the execution of a function, without worrying about cancelling the timer and avoiding a memory leak such as *a React state update on an unmounted component*.
+`useTimeout` abstracts using `setTimeout()` and `clearTimeout()` to schedule the execution of a `Function`, without worrying about cancelling the timer to avoid a memory leak such as *a React state update on an unmounted component*.
 
 `useTimeout :: [Function, Number] -> void`
 
-It will cancel its execution if the component unmounts, or if its reference or the delay has changed.
+It will stop executing `Function` if:
+- the component unmounts
+- the reference to `Function` has changed
+- the delay (`Number`) has changed
 
 ## useTransition
 
-`useTransition` abstracts scheduling multiple state updates over time, with different delays and durations.
+`useTransition` abstracts scheduling multiple state updates over time using different delays and durations.
 
-It will always return the current state as a collection, which can be conceptualized as a box whose values are entering and exiting in and out over time. It can be used eg. to transition between CSS classnames when a component is mounted or before unmouting.
+It will always return the current state as a collection, which can be conceptualized as a box whose values are entering and exiting in and out over time. It can be used eg. to transition between CSS classnames when a component did mount or before unmouting.
 
 `useTransition :: { transitions: [Transition], onExit?: Transition } -> [[a], Restart, Exit?, Boolean?, Enter?]`
 
-A `Transition` (`[a, Number, Number?]`) is a collection of a state value (`a`), and one or two `Number`s: the first one is the delay before the given state is applied, and the second is the duration during which it should be applied, excepted for the `Transition` defined on `onExit`, which is defined only with a duration.
+A `Transition` (`[a, Number, Number?]`) is a collection of a state value (`a`) and one or two `Number`s: the first value is the delay before applying the given state, and the second value is the duration during which it should be applied, except for the `Transition` defined on `onExit`, defined only with a duration.
 
 **Note:** `transitions` should be memoized, otherwhise the inital state will always be applied.
 
-`Exit`, `Enter`, and the `Boolean` are returned only when `onExit` is provided. `Exit` is a function to execute the `Transition` defined on `onExit` before toggling the `Boolean` value to `false`, indicating that the component can be considered as unmounted. `Enter` is a function to toggle this value back to `true`.
+`Exit`, `Enter`, and the `Boolean` are returned only when `onExit` is provided. `Exit` is a `Function` to execute the `Transition` defined on `onExit` before toggling the `Boolean` value to `false`, indicating that the component can be considered as unmounted. `Enter` is a `Function` to toggle this value back to `true`.
 
 **Demo:** [CodePen](https://codepen.io/creative-wave/pen/vMRRWd).
 
@@ -175,7 +183,7 @@ Related packages:
 
 `useValidation :: { onChange?: Function, onBlur?: Function, validateOnChange?: Boolean } -> [String, Props]`
 
-It returns any error message from the Constraint Validation API, and a collection of a component properties such as `onChange` and `onBlur` event handlers, which should be used on an `<input>`, `<select>` or `<textarea>`. Each of those handlers will be composed with any corresponding handler given as argument.
+It returns any error message from the Constraint Validation API, and a collection of component properties such as `onChange` and `onBlur` event handlers, to assing to an `<input>`, `<select>` or `<textarea>`. Each of those handlers will be composed with a corresponding handler given as argument.
 
 ***
 
@@ -183,7 +191,7 @@ It returns any error message from the Constraint Validation API, and a collectio
 
 ### <Filter>
 
-`<Filter>` provides common filter effects to use in a `<svg>`. Each filter effect is indentified by a `name` property.
+`<Filter>` provides common filter effects to use in a `SVGElement`. Each filter effect is indentified by a `name` property.
 
 **List of effects and their props:**
 
@@ -196,11 +204,11 @@ It returns any error message from the Constraint Validation API, and a collectio
 | shadow       | offsetX, offsetY, blur, spread, opacity                        |
 | shadow-inset | offsetX, offsetY, blur, thresold, opacity                      |
 
-All prop types are numbers, or strings representing numbers, except for the `blend` prop of the noise filter, which should be a CSS blend mode value (string).
+All prop are `Number`s or numerical `String`s except for the `blend` prop of the noise filter, which should be a CSS blend mode (`String`).
 
-Lightness always default to 0, ie. with no white or black mixed in, and opacity always default to 0.5.
+Lightness always default to `0`, ie. with no white or black mixed in, and opacity always default to `0.5`.
 
-Using a single filter effect (it should not have a `in` or `result` prop):
+Using a single filter effect (ie. it should not have a `in` or `result` prop):
 
 ```js
     <Filter id='glow-large' name='glow' blur='10' spread='3' opacity='0.3' />
@@ -209,7 +217,7 @@ Using a single filter effect (it should not have a `in` or `result` prop):
 
 **Note:** `id` will default to `name` if not provided.
 
-Composing filter effects (it should have a `in` and/or a `result` prop):
+Composing filter effects (ie. it should have a `in` and/or a `result` prop):
 
 ```js
     <filter id='glow-noise' x='-100%' y='-100%' height='300%' width='300%'>
