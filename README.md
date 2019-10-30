@@ -6,6 +6,7 @@ This package contains common hooks and components to use in a React application.
 **Hooks**
 
 - [`useAnimate`](#useAnimate)
+- [`useAnimateCustom`](#useAnimateCustom)
 - [`useIntersectionObserver`](#useIntersectionObserver)
 - [`useInterval`](#useInterval)
 - [`useGatherMemo`](#useGatherMemo)
@@ -52,6 +53,74 @@ It will return an `Animation` extended with `.then()`, to chain another animatio
 
     return <h1 ref={ref}>red -> green -> orange -> green</h1>
 ```
+
+## useAnimateCustom
+
+`useAnimateCustom` abstracts using `animate()`, a lightweight alternative to `Element.animate()`, which is provided by the [Web Animation API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Animations_API)), or to its [official polyfill](https://github.com/web-animations/web-animations-js), with some extra features.
+
+**Note:** this hook relies on [`@cdoublev/animate`](https://github.com/creativewave/animate) as a peer dependency.
+
+`useAnimateCustom :: Ref -> [Animate, Animation]`
+
+`Ref` is a React reference object containing an `Element`, ie. `Ref => { current: Element }`.
+
+`Animate` is a `Function` that has the following signature: `Animate :: (Keyframes -> Options) -> Animation`.
+
+`Animate` accepts custom `easing` and interpolation functions to create animations that would be hard to achieve or can't be achieved using the Web Animation API:
+- animating values overshooting (bouncing) multiple times across a keyframes interval or a whole iteration
+- animating a property describing a list of values (eg. `transform` or `d`), by interpolating each entry independently
+- animating a value that is not animatable (eg. `innerText`)
+
+`Animation` conforms to the native `Animation` [(W3C)](https://drafts.csswg.org/web-animations/#the-animation-interface)  and it will be automatically cancelled if it's still running when the component unmouts.
+
+**Example (custom easing):**
+
+```js
+    const ref = React.useRef()
+    const [animate, animation] = useAnimate(ref)
+
+    const bounce = t => ((0.04 - (0.04 / t)) * Math.sin(25 * t)) + 1
+    const onHover = () => animate(
+        { opacity: [0, 1] },
+        { duration: 2000, easing: bounce })
+
+    return <h1 ref={ref}>Opacity 0 -> bounce to 1</h1>
+```
+
+**Example (custom interpolation):**
+
+```js
+    import {
+        interpolateTaggedNumbers as interpolate,
+        setProperty as set,
+        tag,
+  } from '@cdoublev/animate'
+
+    const ref = React.useRef()
+    const [animate, animation] = useAnimate(ref)
+
+    const onHover = () => animate(
+        {
+            transform: [
+                { interpolate, value: tag`translateX(${0}px) scale(${0.5})` },
+                { interpolate, value: tag`translateX(${100}px) scale(${1})` },
+            ],
+            innerText: [
+                { set, value: 0 },
+                { set, value: 100 },
+            ],
+        },
+        2000)
+
+    return <h1 ref={ref}>0 to 100</h1>
+```
+
+Check [the README of `@cdoublev/animate`](https://github.com/creativewave/animate) to learn more about its usage.
+
+Related:
+- [React Spring](https://www.react-spring.io/)
+- [(React) Framer Motion](https://www.framer.com/api/motion/)
+- [Tween.js](https://github.com/tweenjs/tween.js)
 
 ## useIntersectionObserver
 
