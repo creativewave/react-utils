@@ -28,94 +28,33 @@ This package contains common hooks and components to use in a React application.
 
 ## useAnimate
 
-`useAnimate` abstracts using `Element.animate()`, provided by the Web Animation API ([MDN](https://developer.mozilla.org/en-US/docs/Web/API/Web_Animations_API)), and cancels an animation if it's still running when the component unmouts.
+`useAnimate` abstracts using `Element.animate()` from the Web Animation API ([MDN](https://developer.mozilla.org/en-US/docs/Web/API/Web_Animations_API)).
 
 `useAnimate :: Ref -> Animate`
 
+`Ref` should be a React reference object containing an `Element`, ie. `Ref => { current: Element }`.
+
 `Animate` is a `Function` that has the following signature: `Animate :: (Keyframes -> Options) -> Animation`.
 
-It will return an `Animation` extended with `.then()`, to chain another animation or just execute a simple callback when the previous animation is finished.
+`Animation` [(W3C)](https://drafts.csswg.org/web-animations/#the-animation-interface) will be cancelled if it's still running when the component unmounts, and is extended with `.then()` as an alias to `Animation.finished`.
 
-`Animation` [(W3C)](https://drafts.csswg.org/web-animations/#the-animation-interface) will be updated each time `animate()` is called.
-
-**Example:**
-
-```js
-    const ref = React.useRef()
-    const [animate, animation] = useAnimate(ref.current)
-
-    const onHover = () => animate(
-        // Animate color from red to green in 2s
-        { color: ['red', 'green'] },
-        { duration: 2000, fill: 'forwards' })
-            .then(() => animation.reverse())
-            // Then animate back to red in 2s
-
-    return <h1 ref={ref}>red -> green -> orange -> green</h1>
-```
+**Example:** https://codepen.io/creative-wave/pen/JjjZRyE
 
 ## useAnimateCustom
 
-`useAnimateCustom` abstracts using `animate()`, a lightweight alternative to `Element.animate()`, which is provided by the [Web Animation API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Animations_API)), or to its [official polyfill](https://github.com/web-animations/web-animations-js), with some extra features.
+`useAnimateCustom` abstracts using `animate()`, a lightweight alternative to [`Element.animate()`](https://developer.mozilla.org/en-US/docs/Web/API/Web_Animations_API)) or its [official polyfill](https://github.com/web-animations/web-animations-js), with some [extra features](https://github.com/creativewave/animate#extra-features).
 
 **Note:** this hook relies on [`@cdoublev/animate`](https://github.com/creativewave/animate) as a peer dependency.
 
 `useAnimateCustom :: Ref -> Animate`
 
-`Ref` is a React reference object containing an `Element`, ie. `Ref => { current: Element }`.
+`Ref` should be a React reference object containing an `Element`, ie. `Ref => { current: Element }`.
 
 `Animate` is a `Function` that has the following signature: `Animate :: (Keyframes -> Options) -> Animation`.
 
-`Animate` accepts custom `easing` and interpolation functions to create animations that would be hard to achieve or can't be achieved using the Web Animation API:
-- animating values overshooting (bouncing) multiple times across a keyframes interval or a whole iteration
-- animating a property describing a list of values (eg. `transform` or `d`), by interpolating each entry independently
-- animating a value that is not animatable (eg. `innerText`)
+`Animation` conforms to the native `Animation` [(W3C)](https://drafts.csswg.org/web-animations/#the-animation-interface), extended with `.then()` as an alias to `Animation.finished`, and it will be cancelled if it's still running when the component unmouts.
 
-`Animation` conforms to the native `Animation` [(W3C)](https://drafts.csswg.org/web-animations/#the-animation-interface)  and it will be automatically cancelled if it's still running when the component unmouts.
-
-**Example (custom easing):**
-
-```js
-    const ref = React.useRef()
-    const [animate, animation] = useAnimate(ref)
-
-    const bounce = t => ((0.04 - (0.04 / t)) * Math.sin(25 * t)) + 1
-    const onHover = () => animate(
-        { opacity: [0, 1] },
-        { duration: 2000, easing: bounce })
-
-    return <h1 ref={ref}>Opacity 0 -> bounce to 1</h1>
-```
-
-**Example (custom interpolation):**
-
-```js
-    import {
-        interpolateTaggedNumbers as interpolate,
-        setProperty as set,
-        tag,
-  } from '@cdoublev/animate'
-
-    const ref = React.useRef()
-    const [animate, animation] = useAnimate(ref)
-
-    const onHover = () => animate(
-        {
-            transform: [
-                { interpolate, value: tag`translateX(${0}px) scale(${0.5})` },
-                { interpolate, value: tag`translateX(${100}px) scale(${1})` },
-            ],
-            innerText: [
-                { set, value: 0 },
-                { set, value: 100 },
-            ],
-        },
-        2000)
-
-    return <h1 ref={ref}>0 to 100</h1>
-```
-
-Check [the README of `@cdoublev/animate`](https://github.com/creativewave/animate) to learn more about its usage.
+**Example:** https://codepen.io/creative-wave/pen/YzzvGxE
 
 Related:
 - [React Spring](https://www.react-spring.io/)
@@ -124,23 +63,26 @@ Related:
 
 ## useIntersectionObserver
 
-`useIntersectionObserver` abstracts using an `IntersectionObserver` to execute a function when an `Element` intersects an ancestor, ie. when it enters in or exit from its ancestor's viewport.
+`useIntersectionObserver` abstracts using an `IntersectionObserver` to execute a function when an `Element` intersects an ancestor, ie. when it enters in or exits from its viewport.
 
-`useIntersectionObserver :: Configuration -> [CallbackRef, CallbackRef]`
+`useIntersectionObserver :: Configuration -> [CallbackRef, String|Number|Symbol -> CallbackRef, Ref]`
 
-The first [`CallbackRef`](https://reactjs.org/docs/refs-and-the-dom.html#callback-refs) should be used to define `root`, ie. the ancestor containing the `Element`s to observe, defined with the second callback ref.
+The first [`CallbackRef`](https://reactjs.org/docs/refs-and-the-dom.html#callback-refs) should be used to define `root`, ie. an ancestor containing the `Element`s to observe, defined with the second callback ref obtained by executing the higher order function with an identifier for each `Element` to observe.
 
-Both should be used, either as a `ref` property in the corresponding component or executed directly with a reference to an `Element`. `root` will be `document` when it's set to `null`. You shouldn't worry about its execution on each update of the component, or when it unmounts.
+Both should be used. `root` will default to `null` (ie. [`document`](https://w3c.github.io/IntersectionObserver/#intersectionobserver-intersection-root)) when the corresponding callback ref is executed without an argument. `null` can't be used to set `document` as `root` since React will execute the callback ref with `null` when the component unmounts.
+
+`Ref` is a React object ref containing the current `IntersectionObserver`. It can be used eg. to manually unobserve a target after a first intersection.
+
+Each observed `Element` will be unobserved before unmount, and `IntersectionObserver` will be disconnected before `root` unmounts, except if `root` corresponds to `document`, as it could be shared with other components in a different tree, since a single `IntersectionObserver` will be created for each unique set of intersection options.
+
+**Example:** https://codepen.io/creative-wave/pen/bGbwxRO
 
 **Configuration:**
 
-- `rootMargin` and `threshold` are two of the three `IntersectionObserver` options ([MDN](https://developer.mozilla.org/en-US/docs/Web/API/IntersectionObserver/IntersectionObserver#Parameters)), the third being `root`
-- `onEnter` and `onExit` are optional callbacks executed with the arguments received from the `IntersectionObserver` callback when an `Element` enters in or exits from its ancestor's viewport
-- `once` is an optional `Boolean` to unobserve an `Element` after its first entrance
+- `rootMargin` and `threshold` are two of the three `IntersectionObserver` options ([W3C](https://w3c.github.io/IntersectionObserver/#dictdef-intersectionobserverinit)), the third being `root`
+- `onEnter` and `onExit` are optional callbacks executed with the arguments received from the `IntersectionObserver` callback when an `Element` enters in or exits from the viewport of its ancestor
 
 **Note:** make sure to assign static/memoized functions to `onEnter()`/`onExit()`, otherwise observe/unobserve effect/cleanup will run on each update of the component that uses this hook.
-
-A single observer is created for each unique set of intersection options, and each observed `Element` will be automatically unobserved before unmounting or (opt-in) after its first entrance.
 
 ## useInterval
 
@@ -157,9 +99,9 @@ It will stop executing `Function` if:
 
 ## useGatherMemo
 
-`useGatherMemo` abstracts merging, gathering, and/or picking properties from object(s), and memoizing the result, ie. by preserving reference(s).
+`useGatherMemo` abstracts merging, gathering, and/or picking properties from object(s), while memoizing the result, ie. by preserving reference(s).
 
-It's a low level hook that can be usefull eg. when you want to merge options or props received in a hook or a component with a large default options object, instead of listing each option argument with a default value and/or listing each one as dependencies of a hook.
+It's a low level hook that can be usefull eg. when you want to merge options or props received in a hook or a component with a large default options object, instead of listing each option argument with a default value and/or listing each one as a dependency of a hook.
 
 `useGatherMemo :: (Object -> ...String|Symbol) -> [a, Object]`
 
@@ -204,19 +146,21 @@ It could be used eg. to delay the render of an error notice after validating an 
 
 `useScrollIntoView` abstracts using `Element.scrollIntoView()` when a `scroll` event is emitted.
 
-Depending on the scroll direction, it prevents the native scroll event and scrolls into view the next or previous `Element` of the given collection.
+Depending on the scroll direction, it prevents the default scroll behavior and scrolls into view the next or previous `Element` of the given collection.
 
-It also abstracts using `IntersectionObserver` to execute a `Function` when an `Element` enters in or exits from an ancestor `Element`. `IntersectionObserver` is also used to set the previous/next `Element` to scroll into view when the `Element` scrolled into view enters in its ancestor's viewport.
+`useScrollIntoView :: Configuration -> [CallbackRef, String|Number|Symbol -> CallbackRef, Ref]`
 
-`useScrollIntoView :: Configuration -> [CallbackRef, CallbackRef]`
+The first [`CallbackRef`](https://reactjs.org/docs/refs-and-the-dom.html#callback-refs) should be used to define `root`, ie. an ancestor containing the `Element`s to scroll into view, defined with the second callback ref, obtained by executing the higher order function with a unique identifier for each `Element` to scroll into view.
 
-The first [`CallbackRef`](https://reactjs.org/docs/refs-and-the-dom.html#callback-refs) should be used to define `root`, ie. the ancestor `Element` that contains target `Element`s to scroll into view, defined using the second callback ref.
+Both should be used. To set `document` as `root`, the corresponding callback ref should be executed without an argument. See [`useIntersectionObserver`] to know why, as it is used to set the previous/next `Element` to scroll into view when an `Element` enters in the viewport of `root`.
 
-Both should be used, either as as a `ref` property in the corresponding component, or executed directly with a reference to the corresponding `Element`. `root` will be `document` when it's set to `null`. You shouldn't worry about its execution on each update of the component, or when it unmounts.
+`Ref` is a React object ref containing the current `IntersectionObserver`.
+
+**Example:** https://codepen.io/creative-wave/pen/jOOKMwo
 
 **Configuration:**
 
-- `beforeScroll` is an optional callback executed before scrolling, which can be used to set the `Element` to scroll into view (by returning its index value in `targets`) or eg. to set a CSS transition classname before scrolling, and receiving as arguments (1) the index of the target that will be scrolled into view, (2) the current target index and (3) the scrolling direction  (`up` or `down`)
+- `beforeScroll` is an optional callback executed before scrolling, that can be used to set the `Element` to scroll into view (by returning its index value in `targets`) or eg. to set a CSS transition classname before scrolling, and receiving as arguments (1) the index of the target that will be scrolled into view, (2) the current target index and (3) the scrolling direction  (`up` or `down`)
 - `delay` (default to `200` ms) is a timeout value before scrolling
 - `wait` (default to `1000` ms) is a timeout value between two authorized scroll events
 - `mode` (default to `auto`) is the [scrolling behavior](https://drafts.csswg.org/cssom-view/#smooth-scrolling)
@@ -224,26 +168,25 @@ Both should be used, either as as a `ref` property in the corresponding componen
 
 ## useSVGMousePosition
 
-`useSVGMousePosition` abstracts translating the position of the mouse relative to an `SVGElement` in `document`, into a position relative to its `viewBox`.
+`useSVGMousePosition` abstracts translating the position of the mouse relative to an `<svg>` in `document`, into a position relative to its `viewBox`.
 
-It could be used eg. to change the position of a child `SVGElement` (paths, filters, clips, masks, gradients, etc...) when hovering its root `SVGElement`.
+It could be used eg. to animate the position of a child `SVGElement` (paths, filters, clips, masks, gradients, etc...).
 
 `useSVGMousePosition :: Configuration -> [Position, CallbackRef, CallbackRef]`
 
-`Position` represents the coordinates of the mouse in the `SVGElement`, relative to its `viewBox`: `Position => { x: Float, y: Float }`.
+`Position` are the coordinates of the mouse: `Position => { x: Float, y: Float }`.
 
-The first [`CallbackRef`](https://reactjs.org/docs/refs-and-the-dom.html#callback-refs) can be used to define either `root` or the `SVGElement`. The latter can also be defined with the second callback ref.
+The first [`CallbackRef`](https://reactjs.org/docs/refs-and-the-dom.html#callback-refs) should be used to define the `<svg>`. Using both callbacks is usefull to listen `mousemove` events in an ancestor `Element` containing the `<svg>` and animate the position of a child `SVGElement` outside of the `<svg>`.
 
-Using both callbacks is usefull to listen for `mousemove` events in an ancestor `Element` different than `document`, but note that `Position` will always be computed relative to `document`.
+**Note:** the `<svg>` should preserve its aspect ratio, otherwise `Position` will be incorrect, as the current implementation is using `Element.getBoundingClientRect()` to compute its dimensions.
 
-**Note:** the `SVGElement` should preserve its aspect ratio, otherwise `Position` will be incorrect, as the current implementation is using `Element.getBoundingClientRect()` to compute its dimensions.
+**Example:** https://codepen.io/creative-wave/pen/VwwdKVX
 
 **Configuration:**
 
-- `thresold` (default to `1`) is an optional number to "expand" or "shrink" the `target` box layout area, ie. its [`DOMRect`](https://developer.mozilla.org/en-US/docs/Web/API/DOMRect)
-- `inital` (default to `{ x: 0, y: 0 }`) is an optional initial position
-- `shouldListen` (default to `true`) is an optional `Boolean` to "mute" the `mousemove` event listener while it's `false`
-- `isFixed` (default to `false`) is an optional `Boolean` to flag the `target` as having a fixed position
+- `hasRoot` (default to `false`) is an optional boolean to make sure that the `mouseover` event listener will be registered only when the `<svg>` is mounted, eg. if it's conditionally rendered in its `root` component
+- `initial` (default to `{ x: 0, y: 0 }`) is an optional initial position
+- `isFixed` (default to `false`) is an optional `Boolean` to flag the `target` as having a fixed position in the viewport of `document`, ie. in `window`
 - `precision` (default to `2`) is an optional number to round `Position` values
 
 ## useTimeout
@@ -283,7 +226,7 @@ Related packages:
 
 `useValidation :: { onChange?: Function, onBlur?: Function, validateOnChange?: Boolean } -> [String, Props]`
 
-It returns any error message from the Constraint Validation API, and a collection of component properties such as `onChange` and `onBlur` event handlers, to assing to an `<input>`, `<select>` or `<textarea>`. Each of those handlers will be composed with a corresponding handler given as argument.
+It returns any error message from the Constraint Validation API, and a collection of component properties such as `onChange` and `onBlur` event handlers, to assign to an `<input>`, `<select>` or `<textarea>`. Each of those handlers will be composed with a corresponding handler given as argument.
 
 ***
 
@@ -298,11 +241,11 @@ It returns any error message from the Constraint Validation API, and a collectio
 | Id           | Props                                                          |
 | ------------ | -------------------------------------------------------------- |
 | glow         | blur, spread, lightness, opacity                               |
-| glow-inset   | blur, thresold, lightness, opacity                             |
+| glow-inset   | blur, threshold, lightness, opacity                             |
 | gooey        | tolerance                                                      |
 | noise        | frequency, blend, color (default to black), lightness, opacity |
 | shadow       | offsetX, offsetY, blur, spread, opacity                        |
-| shadow-inset | offsetX, offsetY, blur, thresold, opacity                      |
+| shadow-inset | offsetX, offsetY, blur, threshold, opacity                      |
 
 All prop are `Number`s or numerical `String`s except for the `blend` prop of the noise filter, which should be a CSS blend mode (`String`).
 
