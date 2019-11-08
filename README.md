@@ -30,7 +30,7 @@ This package contains common hooks and components to use in a React application.
 
 `useAnimate` abstracts using `Element.animate()`, provided by the Web Animation API ([MDN](https://developer.mozilla.org/en-US/docs/Web/API/Web_Animations_API)), and cancels an animation if it's still running when the component unmouts.
 
-`useAnimate :: Ref -> [Animate, Animation]`
+`useAnimate :: Ref -> Animate`
 
 `Animate` is a `Function` that has the following signature: `Animate :: (Keyframes -> Options) -> Animation`.
 
