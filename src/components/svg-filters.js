@@ -51,7 +51,7 @@ Glow.propTypes = {
  */
 const GlowInset = props =>
     <>
-        <feMorphology in={props.in} operator='erode' radius={props.thresold} />
+        <feMorphology in={props.in} operator='erode' radius={props.threshold} />
         <feGaussianBlur stdDeviation={props.blur} result='blur' />
         <ColorCorrection lightness={props.lightness} opacity={props.opacity} />
         <feBlend in='SourceGraphic' mode='screen' result={props.result} />
@@ -62,7 +62,7 @@ GlowInset.propTypes = {
     blur: NumberOrString.isRequired,
     in: PropTypes.string,
     result: PropTypes.string,
-    thresold: NumberOrString.isRequired,
+    threshold: NumberOrString.isRequired,
 }
 
 /**
@@ -155,7 +155,7 @@ Shadow.propTypes = {
  */
 const ShadowInset = ({ offsetX = 0, offsetY = 0, ...props }) =>
     <>
-        <feMorphology in={props.in} operator='dilate' radius={props.thresold} />
+        <feMorphology in={props.in} operator='dilate' radius={props.threshold} />
         <feGaussianBlur stdDeviation={props.blur} />
         <ColorCorrection lightness={props.lightness} opacity={props.opacity} />
         <feOffset dx={offsetX} dy={offsetY} />
@@ -170,7 +170,7 @@ ShadowInset.propTypes = {
     offsetX: NumberOrString,
     offsetY: NumberOrString,
     result: PropTypes.string,
-    thresold: NumberOrString.isRequired,
+    threshold: NumberOrString.isRequired,
 }
 
 /**
