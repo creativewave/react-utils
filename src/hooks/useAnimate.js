@@ -2,7 +2,7 @@
 import React from 'react'
 
 /**
- * useAnimate :: Ref -> [(Keyframes -> Options) -> Animation, Animation]
+ * useAnimate :: Ref -> (Keyframes -> Options) -> Animation
  *
  * Ref => { current: Element }
  *
@@ -21,28 +21,28 @@ import React from 'react'
  */
 const useAnimate = ref => {
 
-    const [animation, setAnimation] = React.useState({})
+    const animation = React.useRef()
     const animate = React.useCallback(
         (keyframes, options) => {
             if (!ref.current) {
                 return
             }
-            const animation = ref.current.animate(keyframes, options)
-            animation.then = fn => new Promise(resolve => {
-                animation.onfinish = () => resolve(fn(animation))
+            animation.current = ref.current.animate(keyframes, options)
+            // eslint-disable-next-line compat/compat
+            animation.current.then = fn => new Promise(resolve => {
+                animation.current.onfinish = () => resolve(fn(animation.current))
             })
-            setAnimation(animation)
-            return animation
+            return animation.current
         },
         [ref])
 
     React.useEffect(() => () => {
-        if (animation.playState === 'running') {
-            animation.cancel()
+        if (animation.current && animation.current.playState === 'running') {
+            animation.current.cancel()
         }
     }, [animation])
 
-    return [animate, animation]
+    return animate
 }
 
 export default useAnimate
