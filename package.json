@@ -27,6 +27,7 @@
     "lint": "eslint src",
     "safe-publish": "npm run lint && npm run test && npm run build && npm publish",
     "test": "jest",
+    "test:report": "jest -i --reporters='jest-junit'",
     "test:watch": "jest --watchAll -b "
   },
   "devDependencies": {

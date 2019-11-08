@@ -1,4 +1,6 @@
 
+[![CircleCI](https://circleci.com/gh/creativewave/react-utils.svg?style=svg)](https://circleci.com/gh/creativewave/react-utils)
+
 # React Utils
 
 This package contains common hooks and components to use in a React application.

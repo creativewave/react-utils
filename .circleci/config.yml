@@ -1,0 +1,29 @@
+version: 2
+jobs:
+  build:
+    working_directory: ~/use-definition
+    docker:
+      - image: node:current
+    steps:
+      - checkout
+      - run:
+          name: npm-update
+          command: 'npm install -g npm@latest'
+      - restore_cache:
+          key: npm-update-{{ checksum "package.json" }}
+      - run:
+          name: npm-install
+          command: npm install
+      - restore_cache:
+          key: npm-install-{{ checksum "package.json" }}
+          paths:
+            - ./node_modules
+      - run:
+          command: npm run lint && npm run test:report
+          environment:
+            JEST_JUNIT_OUTPUT_DIR: 'test/results.xml'
+          when: always
+      - store_artifacts:
+          path: test/results.xml
+      - store_test_results:
+          path: test/results.xml
