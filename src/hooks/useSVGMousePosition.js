@@ -1,7 +1,8 @@
 
 import React from 'react'
 import noop from '../lib/noop'
-import { universalDocument } from '../lib/universal'
+import round from '../lib/round'
+import task from '../lib/task'
 
 const defaultPosition = { x: 0, y: 0 }
 
@@ -14,23 +15,15 @@ const defaultPosition = { x: 0, y: 0 }
  *
  * Position => { x: Float, y: Float }
  * Configuration => {
- *   initial: Position,
+ *   hasRoot?: Boolean,
+ *   initial?: Position,
  *   isFixed?: Boolean,
  *   precision?: Number,
- *   shouldListen?: Boolean,
- *   thresold?: Number,
  * }
  *
  * It should avoid multiple reflows in the same render cycle, by reading values
  * in a callback given to `requestAnimationFrame()`, whose execution should be
  * guarded until its callback is run, to prevent forced synchronous layout.
- *
- * It should use a `thresold` to expand/shrink the `target` area over which it
- * should receive `mousemove` events.
- *
- * It should listen for `mousemove` events in `root`, which should default to
- * `document` if `root` is null, over the given `target`, which should default
- * to `root` if `target` is null.
  *
  * TODO: compare performances of `SVG.createPoint()` and `SVG.getScreenCTM()` vs
  * `Element.getBoundingClientRect()`, to translate a DOM position into an SVG
@@ -39,96 +32,93 @@ const defaultPosition = { x: 0, y: 0 }
  * https://codepen.io/creative-wave/pen/pozVJL
  */
 const useSVGMousePosition = ({
+    hasRoot = false,
     initial = defaultPosition,
     isFixed = false,
     precision = 2,
-    shouldListen = true,
-    thresold = 1,
 } = {}) => {
 
     const [position, setPosition] = React.useState(initial)
 
+    const didMount = React.useRef(false)
     const root = React.useRef()
     const target = React.useRef()
     const cleanup = React.useRef(noop)
     const timerId = React.useRef()
 
-    const hasSubArea = React.useMemo(() => target.current !== root.current || thresold !== 1, [target, thresold, root])
-    const onMouseMove = React.useCallback(
-        ({ clientX, clientY }) => {
+    const initListener = React.useCallback(
+        (root, target = root) => {
 
-            const rect = target.current.getBoundingClientRect()
-            const { x, y } = isFixed
-                ? { x: rect.x, y: rect.y }
-                : { x: rect.x - window.scrollX, y: rect.y - window.scrollY }
+            const updatePosition = ({ clientX, clientY }) => {
 
-            if (hasSubArea && (
-                (clientX * thresold) < x
-                || (clientX / thresold) > (x + rect.width)
-                || (clientY * thresold) < y
-                || (clientY / thresold) > (y + rect.height))) {
+                const { height, width, x, y } = target.getBoundingClientRect()
+                const [,, viewBoxWidth, viewBoxHeight] = target.getAttribute('viewBox').split(' ')
 
-                return timerId.current = null
+                setPosition({
+                    x: round(precision, (clientX - (isFixed ? x - window.scrollX : x)) / width * viewBoxWidth),
+                    y: round(precision, (clientY - (isFixed ? y - window.scrollY : y)) / height * viewBoxHeight),
+                })
+                timerId.current = null
             }
 
-            const [,, viewBoxWidth, viewBoxHeight] = target.current.getAttribute('viewBox').split(' ')
-
-            setPosition({
-                x: ((clientX - x) / rect.width * viewBoxWidth).toFixed(precision),
-                y: ((clientY - y) / rect.height * viewBoxHeight).toFixed(precision),
-            })
-            timerId.current = null
-        },
-        [hasSubArea, isFixed, precision, setPosition, target, thresold, timerId])
-
-    const setRoot = React.useCallback(
-        node => {
-
-            if (node === null && typeof root.current !== 'undefined') {
-
-                cleanup.current()
-                target.current = undefined
-                root.current = undefined
-
-                return
-            }
-            root.current = node || universalDocument
-
-            if (!target.current) {
-                target.current = root.current
-            }
-
-            if (!(shouldListen && root.current && target.current)) {
-                return
-            }
-
-            const onMove = event => {
+            const onMouseMove = event => {
                 if (timerId.current) {
                     return
                 }
-                timerId.current = requestAnimationFrame(() => onMouseMove(event))
+                timerId.current = task.request(() => updatePosition(event))
             }
-            root.current.addEventListener('mousemove', onMove)
+
+            root.addEventListener('mousemove', onMouseMove)
             cleanup.current = () => {
-                timerId.current && cancelAnimationFrame(timerId.current)
-                root.current.removeEventListener('mousemove', onMove)
+                timerId.current && task.cancel(timerId.current)
+                root.removeEventListener('mousemove', onMouseMove)
             }
         },
-        [cleanup, onMouseMove, root, shouldListen, target, timerId])
-    const setTarget = React.useCallback(
+        [isFixed, precision, setPosition, timerId])
+
+    const setRoot = React.useCallback(
         node => {
+            root.current = node
             if (node === null) {
-                if (node !== target.current) {
+                if (cleanup.current) {
                     cleanup.current()
                 }
-                target.current = undefined
+                return
+            } else if ((node === root.current && !cleanup) || !target.current) {
                 return
             }
-            target.current = node
+            initListener(root.current, target.current)
         },
-        [cleanup, target])
+        [cleanup, initListener, root, target])
+    const setTarget = React.useCallback(
+        node => {
+            target.current = node
+            if (node === null) {
+                cleanup.current()
+                return
+            } else if (hasRoot) {
+                return
+            }
+            initListener(target.current)
+        },
+        [cleanup, hasRoot, initListener, target])
 
-    return [position, setRoot, setTarget]
+    React.useEffect(
+        () => {
+            if (!didMount.current) {
+                didMount.current = true
+                return
+            }
+            if (target.current) {
+                setTarget(target.current)
+            }
+            if (root.current) {
+                setRoot(root.current)
+            }
+        },
+        [didMount, root, setRoot, setTarget, target])
+
+    return [position, setTarget, setRoot]
 }
 
 export default useSVGMousePosition
