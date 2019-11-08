@@ -3,28 +3,28 @@ import React from 'react'
 import animate from '@cdoublev/animate'
 
 /**
- * useAnimateCustom :: Ref -> [Keyframes -> Options -> Animation, Animation]
+ * useAnimateCustom :: Ref -> (Keyframes -> Options) -> Animation
  *
  * Ref => { current: Element }
  */
 const useAnimateCustom = ref => {
-    const [animation, setAnimation] = React.useState()
+
+    const animation = React.useRef()
     const customAnimate = React.useCallback(
         (keyframes, options) => {
-            if (!ref.current) {
-                return
+            if (ref.current) {
+                return animation.current = animate(ref.current, keyframes, options)
             }
-            const animation = animate(ref.current, keyframes, options)
-            setAnimation(animation)
-            return animation
         },
         [ref])
+
     React.useEffect(() => () => {
-        if (animation.playState === 'running') {
-            animation.cancel()
+        if (animation.current && animation.current.playState === 'running') {
+            animation.current.cancel()
         }
     }, [animation])
-    return [customAnimate, animation]
+
+    return customAnimate
 }
 
 export default useAnimateCustom
