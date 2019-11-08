@@ -9,7 +9,7 @@ import React from 'react'
  *
  * Memo: default behavior validates on blur vs. on change, which might not be
  * the best user experience in some cases, like filling a password field with an
- * output value which is obfuscated, and which has multiple conditions.
+ * output value that is obfuscated and has multiple conditions.
  *
  * TODO: implement interface(s) to use and register a custom validation function
  * using the Constraint Validation API (default behavior: exit on first error).
