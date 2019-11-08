@@ -60,7 +60,7 @@ It will return an `Animation` extended with `.then()`, to chain another animatio
 
 **Note:** this hook relies on [`@cdoublev/animate`](https://github.com/creativewave/animate) as a peer dependency.
 
-`useAnimateCustom :: Ref -> [Animate, Animation]`
+`useAnimateCustom :: Ref -> Animate`
 
 `Ref` is a React reference object containing an `Element`, ie. `Ref => { current: Element }`.
 
