@@ -9,12 +9,12 @@ import React from 'react'
  * State => [a]
  * Restart => Exit => Enter => void -> void
  *
- * Memo(1): the only way to execute a transition before unmounting is to delay
- * the function that triggers this event. An `isMounted` state value is returned
- * to render the component (or eg. `null`), as well as an `exit` function to
- * toggle `isMounted` after the `Transition` defined on `onExit`.
+ * Memo: the only way to execute a transition before unmount is to delay the
+ * function that triggers this event. An `isMounted` state value is returned to
+ * render the component or `null`, as well as an `exit` function to toggle
+ * `isMounted` after the `Transition` defined on `onExit`.
  *
- * Memo(2): preserving the same reference of `transitions` is the responsibility
+ * Memo: preserving the same reference of `transitions` is the responsibility
  * of the component, which is a better tradeoff than using/parsing/memoizing a
  * primitive (string) value.
  *
