@@ -71,16 +71,17 @@ const addListeners = (viewPort, targets, onScroll, isScrolling) => {
 }
 
 /**
- * useScrollIntoView :: Configuration -> [Element|null -> void, Element|null -> void]
+ * useScrollIntoView :: Configuration -> [CallbackRef, CallbackRef]
  *
  * Configuration => {
  *   beforeScroll?: (Number -> Number -> String) -> Number|void,
  *   delay?: Number,
  *   mode?: String,
- *   onEnter?: (Entry -> Observer) -> void,
- *   onExit?: (Entry -> Observer) -> void,
+ *   onEnter?: (IntersectionObserverEntry -> IntersectionObserver) -> void,
+ *   onExit?: (IntersectionObserverEntry -> IntersectionObserver) -> void,
  *   wait?: Number,
  * }
+ * CallbackRef :: Element?|null -> void
  *
  * It should prevent scrolling an `Element` into view on `pointerdown`, ie. when
  * a mouse button is pressed (including `mousedown`), or when a physical contact
