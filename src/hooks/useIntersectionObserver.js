@@ -25,7 +25,8 @@ class IntersectionObserversCache {
     }
 
     /**
-     * set :: ((Entries -> IntersectionObserver -> void) -> IntersectionObserverOptions) -> IntersectionObserver
+     * set :: (([IntersectionObserverEntry] -> IntersectionObserver -> void) -> IntersectionObserverOptions)
+     *     -> IntersectionObserver
      */
     set(callback, options) {
         // eslint-disable-next-line compat/compat
@@ -37,12 +38,12 @@ class IntersectionObserversCache {
 const observers = new IntersectionObserversCache()
 
 /**
- * handleIntersection :: (Targets -> Callbacks) -> ([Element] -> IntersectionObserver) -> void
+ * handleIntersection :: (Targets -> Callbacks) -> ([IntersectionObserverEntry] -> IntersectionObserver) -> void
  *
  * Targets => { current: [Element] }
  * Callbacks => {
- *   onEnter?: (Entry -> IntersectionObserver) -> void,
- *   onExit?: (Entry -> IntersectionObserver) -> void,
+ *   onEnter?: (IntersectionObserverEntry -> IntersectionObserver) -> void,
+ *   onExit?: (IntersectionObserverEntry -> IntersectionObserver) -> void,
  *   once?: Boolean,
  * }
  */
@@ -61,24 +62,24 @@ const handleIntersection = (targets, { onEnter, onExit, once }) => (entries, obs
     })
 
 /**
- * useIntersectionObserver :: Configuration -> [Element|null -> void, Element|null -> void]
+ * useIntersectionObserver :: Configuration -> [CallbackRef, CallbackRef]
  *
  * Configuration => {
- *   onEnter?: (Entry -> IntersectionObserver) -> void,
- *   onExit?: (Entry -> IntersectionObserver) -> void,
+ *   onEnter?: (IntersectionObserverEntry -> IntersectionObserver) -> void,
+ *   onExit?: (IntersectionObserverEntry -> IntersectionObserver) -> void,
  *   once?: Boolean,
  *   rootMargin?: String,
  *   threshold?: Number,
  * }
+ * CallbackRef :: Element?|null -> void
  *
- * It should use a single observer instance per unique set of options given as
- * arguments.
+ * It should use a single observer per unique set of options given as arguments.
  *
  * It should use a single callback for all observer instances.
  *
- * It should unobserve a target element before the component unmouts.
+ * It should unobserve a target when its component unmouts.
  *
- * It should disconnect before the root component unmounts.
+ * It should disconnect a root component when it unmounts.
  *
  * Memo: the observer will trigger `onEnter` or `onExit` after root did mount.
  *
