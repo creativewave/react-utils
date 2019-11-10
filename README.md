@@ -40,7 +40,7 @@ This package contains common hooks and components to use in a React application.
 
 `Animation` [(W3C)](https://drafts.csswg.org/web-animations/#the-animation-interface) will be cancelled if it's still running when the component unmounts, and is extended with `.then()` as an alias to `Animation.finished`.
 
-**Example:** https://codepen.io/creative-wave/pen/JjjZRyE
+**Example:** [CodePen](https://codepen.io/creative-wave/pen/JjjZRyE)
 
 ## useAnimateCustom
 
@@ -56,7 +56,7 @@ This package contains common hooks and components to use in a React application.
 
 `Animation` conforms to the native `Animation` [(W3C)](https://drafts.csswg.org/web-animations/#the-animation-interface), extended with `.then()` as an alias to `Animation.finished`, and it will be cancelled if it's still running when the component unmouts.
 
-**Example:** https://codepen.io/creative-wave/pen/YzzvGxE
+**Example:** [CodePen](https://codepen.io/creative-wave/pen/YzzvGxE)
 
 Related:
 - [React Spring](https://www.react-spring.io/)
@@ -75,16 +75,16 @@ Both should be used. `root` will default to `null` (ie. [`document`](https://w3c
 
 `Ref` is a React object ref containing the current `IntersectionObserver`. It can be used eg. to manually unobserve a target after a first intersection.
 
-Each observed `Element` will be unobserved before unmount, and `IntersectionObserver` will be disconnected before `root` unmounts, except if `root` corresponds to `document`, as it could be shared with other components in a different tree, since a single `IntersectionObserver` will be created for each unique set of intersection options.
+Each observed `Element` will be unobserved before unmount, and the current `IntersectionObserver` will be disconnected before `root` unmounts, except if `root` corresponds to `document`, as it could be shared with other components in a different tree. Only one `IntersectionObserver` will actually be created for each unique set of intersection options.
 
-**Example:** https://codepen.io/creative-wave/pen/bGbwxRO
+**Example:** [CodePen](https://codepen.io/creative-wave/pen/bGbwxRO)
 
 **Configuration:**
 
 - `rootMargin` and `threshold` are two of the three `IntersectionObserver` options ([W3C](https://w3c.github.io/IntersectionObserver/#dictdef-intersectionobserverinit)), the third being `root`
 - `onEnter` and `onExit` are optional callbacks executed with the arguments received from the `IntersectionObserver` callback when an `Element` enters in or exits from the viewport of its ancestor
 
-**Note:** make sure to assign static/memoized functions to `onEnter()`/`onExit()`, otherwise observe/unobserve effect/cleanup will run on each update of the component that uses this hook.
+**Note:** make sure to use a memoized value for `threshold` if it's an `Array`, as well as for `onEnter` and `onExit`.
 
 ## useInterval
 
@@ -105,7 +105,7 @@ It will stop executing `Function` if:
 
 It's a low level hook that can be usefull eg. when you want to merge options or props received in a hook or a component with a large default options object, instead of listing each option argument with a default value and/or listing each one as a dependency of a hook.
 
-`useGatherMemo :: (Object -> ...String|Symbol) -> [a, Object]`
+`useGatherMemo :: (Object -> ...String|Symbol) -> [x, Object]`
 
 **Example:**
 
@@ -208,9 +208,9 @@ It will stop executing `Function` if:
 
 It will always return the current state as a collection, which can be conceptualized as a box whose values are entering and exiting in and out over time. It can be used eg. to transition between CSS classnames when a component did mount or before unmouting.
 
-`useTransition :: { transitions: [Transition], onExit?: Transition } -> [[a], Restart, Exit?, Boolean?, Enter?]`
+`useTransition :: { transitions: [Transition], onExit?: Transition } -> [[x], Restart, Exit?, Boolean?, Enter?]`
 
-A `Transition` (`[a, Number, Number?]`) is a collection of a state value (`a`) and one or two `Number`s: the first value is the delay before applying the given state, and the second value is the duration during which it should be applied, except for the `Transition` defined on `onExit`, defined only with a duration.
+A `Transition` (`[x, Number, Number?]`) is a collection of a state value (`x`) and one or two `Number`s: the first value is the delay before applying the given state, and the second value is the duration during which it should be applied, except for the `Transition` defined on `onExit`, defined only with a duration.
 
 **Note:** `transitions` should be memoized, otherwhise the inital state will always be applied.
 
