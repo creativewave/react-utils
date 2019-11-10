@@ -181,7 +181,10 @@ const useScrollIntoView = ({
 
                 if (!scrollTarget) {
 
-                    const { clientHeight, scrollHeight, scrollTop } = root.current
+                    const { clientHeight, scrollHeight, scrollTop } =
+                        root.current === document
+                            ? root.current.body
+                            : root.current
 
                     if (direction < 0 && scrollTop === 0) return
                     if (direction > 0 && scrollTop + clientHeight === scrollHeight) return
