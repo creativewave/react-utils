@@ -5,8 +5,8 @@ import React from 'react'
  * useTransition :: { transitions: [Transition], onExit: [Transition] }
  *               -> [State, Restart, Exit, Boolean, Enter]
  *
- * Transition => [a, Number, Number?]
- * State => [a]
+ * Transition => [x, Number, Number?]
+ * State => [x]
  * Restart => Exit => Enter => void -> void
  *
  * Memo: the only way to execute a transition before unmount is to delay the
@@ -24,8 +24,8 @@ import React from 'react'
 const useTransition = ({ transitions, onExit }) => {
 
     const initialState = React.useMemo(
-        () => transitions.reduce((state, [a, delay]) => {
-            if (delay === 0) state.push(a)
+        () => transitions.reduce((state, [x, delay]) => {
+            if (delay === 0) state.push(x)
             return state
         }, []),
         [transitions])
@@ -41,12 +41,12 @@ const useTransition = ({ transitions, onExit }) => {
             return
         }
 
-        transitions.forEach(([a, delay, duration]) => {
+        transitions.forEach(([x, delay, duration]) => {
             if (delay > 0) {
-                ids.push(setTimeout(() => setState(aa => aa.concat(a)), delay))
+                ids.push(setTimeout(() => setState(xx => xx.concat(x)), delay))
             }
             if (typeof duration === 'number') {
-                ids.push(setTimeout(() => setState(aa => aa.filter(aa => aa !== a)), duration))
+                ids.push(setTimeout(() => setState(xx => xx.filter(xx => xx !== x)), duration))
             }
         })
 
@@ -59,10 +59,10 @@ const useTransition = ({ transitions, onExit }) => {
 
     if (onExit) {
 
-        const [a, delay] = onExit
+        const [x, delay] = onExit
         const exit = () => {
             ids.forEach(clearTimeout)
-            setState([a])
+            setState([x])
             setTimeout(() => setIsMounted(false), delay)
         }
         const enter = () => setIsMounted(true)
