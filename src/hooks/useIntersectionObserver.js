@@ -100,7 +100,11 @@ const useIntersectionObserver = ({
             const options = { root: root.current, rootMargin, threshold }
 
             if (node === null) {
-                // Don't disconnect an observer set with document (null) as root
+                // (1) Fix HMR with root being unmounted after a forced update and its effect below
+                if (!observer.current) {
+                    return
+                }
+                // (2) Don't disconnect an observer set with document (null) as root
                 // (it may be used by other components)
                 if (root.current !== null) {
                     observer.current.disconnect()
