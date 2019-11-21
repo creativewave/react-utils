@@ -44,7 +44,7 @@ This package contains common hooks and components to use in a React application.
 
 ## useAnimateCustom
 
-`useAnimateCustom` abstracts using `animate()`, a lightweight alternative to [`Element.animate()`](https://developer.mozilla.org/en-US/docs/Web/API/Web_Animations_API)) or its [official polyfill](https://github.com/web-animations/web-animations-js), with some [extra features](https://github.com/creativewave/animate#extra-features).
+`useAnimateCustom` abstracts using `animate()`, a lightweight alternative to [`Element.animate()`](https://developer.mozilla.org/en-US/docs/Web/API/Web_Animations_API) or its [official polyfill](https://github.com/web-animations/web-animations-js), with some [extra features](https://github.com/creativewave/animate#extra-features).
 
 **Note:** this hook relies on [`@cdoublev/animate`](https://github.com/creativewave/animate) as a peer dependency.
 
@@ -154,11 +154,11 @@ Depending on the scroll direction, it prevents the default scroll behavior and s
 
 The first [`CallbackRef`](https://reactjs.org/docs/refs-and-the-dom.html#callback-refs) should be used to define `root`, ie. an ancestor containing the `Element`s to scroll into view, defined with the second callback ref, obtained by executing the higher order function with a unique identifier for each `Element` to scroll into view.
 
-Both should be used. To set `document` as `root`, the corresponding callback ref should be executed without an argument. See [`useIntersectionObserver`] to know why, as it is used to set the previous/next `Element` to scroll into view when an `Element` enters in the viewport of `root`.
+Both should be used. To set `document` as `root`, the corresponding callback ref should be executed without an argument. See [`useIntersectionObserver`](#useIntersectionObserver) to know why, as it is used to set the previous/next `Element` to scroll into view when an `Element` enters in the viewport of `root`.
 
 `Ref` is a React object ref containing the current `IntersectionObserver`.
 
-**Example:** https://codepen.io/creative-wave/pen/jOOKMwo
+**Example:** [CodePen](https://codepen.io/creative-wave/pen/jOOKMwo)
 
 **Configuration:**
 
@@ -182,7 +182,7 @@ The first [`CallbackRef`](https://reactjs.org/docs/refs-and-the-dom.html#callbac
 
 **Note:** the `<svg>` should preserve its aspect ratio, otherwise `Position` will be incorrect, as the current implementation is using `Element.getBoundingClientRect()` to compute its dimensions.
 
-**Example:** https://codepen.io/creative-wave/pen/VwwdKVX
+**Example:** [CodePen](https://codepen.io/creative-wave/pen/VwwdKVX)
 
 **Configuration:**
 
