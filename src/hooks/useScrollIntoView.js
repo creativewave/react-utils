@@ -139,7 +139,7 @@ const useScrollIntoView = ({
             onEnter(entry)
         },
         [onEnter, setCurrentTarget, targets])
-    const [setOberverRoot, setObserverTarget, observer] = useIntersectionObserver({
+    const [setObserverRoot, setObserverTarget, observer] = useIntersectionObserver({
         debug,
         onEnter: handleEnter,
         onExit,
@@ -150,7 +150,7 @@ const useScrollIntoView = ({
     const setRoot = React.useCallback(
         node => {
 
-            setOberverRoot(node)
+            setObserverRoot(node)
 
             if (node === null) {
                 cleanup.current()
@@ -205,7 +205,7 @@ const useScrollIntoView = ({
             }
             cleanup.current = addEventListeners(root.current = node || document, onScroll, isScrolling)
         },
-        [beforeScroll, debug, delay, isScrolling, mode, root, setCurrentTarget, setOberverRoot, target, targets, wait])
+        [beforeScroll, debug, delay, isScrolling, mode, root, setCurrentTarget, setObserverRoot, target, targets, wait])
     const setTarget = React.useCallback(
         memoize(id => node => {
 
