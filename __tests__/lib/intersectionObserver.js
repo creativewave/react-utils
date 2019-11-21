@@ -1,5 +1,5 @@
 
-import IntersectionObserver from '../src/lib/intersectionObserver'
+import IntersectionObserver from '../../src/lib/intersectionObserver'
 
 const elements = [{ id: 'element-1' }, { id: 'element-2' }, { id: 'element-3' }]
 const callback = jest.fn((entries, observer) => callbackReturnValues.push({ entries, observer }))

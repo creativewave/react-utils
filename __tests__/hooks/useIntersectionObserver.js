@@ -1,9 +1,9 @@
 
 import { render, unmountComponentAtNode } from 'react-dom'
-import IntersectionObserver from '../src/lib/intersectionObserver'
+import IntersectionObserver from '../../src/lib/intersectionObserver'
 import React from 'react'
 import { act } from 'react-dom/test-utils'
-import useIntersectionObserver from '../src/hooks/useIntersectionObserver'
+import useIntersectionObserver from '../../src/hooks/useIntersectionObserver'
 
 let container = null
 beforeEach(() => {

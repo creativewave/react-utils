@@ -1,5 +1,5 @@
 
-import task from '../src/lib/task'
+import task from '../../src/lib/task'
 
 describe('raf', () => {
     it('should stub window.requestAnimationFrame() and window.cancelAnimationFrame()', () => {
