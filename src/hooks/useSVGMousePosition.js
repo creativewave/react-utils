@@ -47,7 +47,7 @@ const useSVGMousePosition = ({
     const timerId = React.useRef()
 
     const initListener = React.useCallback(
-        (root, target = root) => {
+        (root, target) => {
 
             const updatePosition = ({ clientX, clientY }) => {
 
@@ -55,8 +55,8 @@ const useSVGMousePosition = ({
                 const [,, viewBoxWidth, viewBoxHeight] = target.getAttribute('viewBox').split(' ')
 
                 setPosition({
-                    x: round(precision, (clientX - (isFixed ? x - window.scrollX : x)) / width * viewBoxWidth),
-                    y: round(precision, (clientY - (isFixed ? y - window.scrollY : y)) / height * viewBoxHeight),
+                    x: round(precision, (clientX - (isFixed ? x : x - root.scrollLeft)) / width * viewBoxWidth),
+                    y: round(precision, (clientY - (isFixed ? y : y - root.scrollTop)) / height * viewBoxHeight),
                 })
                 timerId.current = null
             }
@@ -72,19 +72,20 @@ const useSVGMousePosition = ({
             cleanup.current = () => {
                 timerId.current && task.cancel(timerId.current)
                 root.removeEventListener('mousemove', onMouseMove)
+                cleanup.current = noop
             }
         },
         [isFixed, precision, setPosition, timerId])
 
     const setRoot = React.useCallback(
         node => {
+            if (node === root.current) {
+                return
+            }
             root.current = node
             if (node === null) {
-                if (cleanup.current) {
-                    cleanup.current()
-                }
-                return
-            } else if ((node === root.current && !cleanup) || !target.current) {
+                return cleanup.current()
+            } else if (!target.current) {
                 return
             }
             initListener(root.current, target.current)
@@ -92,16 +93,18 @@ const useSVGMousePosition = ({
         [cleanup, initListener, root, target])
     const setTarget = React.useCallback(
         node => {
-            target.current = node
-            if (node === null) {
-                cleanup.current()
-                return
-            } else if (hasRoot) {
+            if (node === target.current) {
                 return
             }
-            initListener(target.current)
+            target.current = node
+            if (node === null) {
+                return cleanup.current()
+            } else if (hasRoot && !root.current) {
+                return
+            }
+            initListener(root.current || target.current, target.current)
         },
-        [cleanup, hasRoot, initListener, target])
+        [cleanup, hasRoot, initListener, root, target])
 
     React.useEffect(
         () => {
