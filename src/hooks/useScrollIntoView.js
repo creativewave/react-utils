@@ -47,12 +47,10 @@ const addEventListeners = (root, onScroll, isScrolling) => {
             if (!cancelTimers) {
                 return
             }
+            isScrolling.current = true
         }
-        // Disable native scroll action
-        // https://stackoverflow.com/questions/4770025/how-to-disable-scrolling-temporarily
         event.preventDefault()
-        // TODO: check if it's really required.
-        event.returnValue = false
+        return event.returnValue = false
     }
     const onPointerDown = () => isPointerDown = true
     const onPointerUp = () => isPointerDown = false
