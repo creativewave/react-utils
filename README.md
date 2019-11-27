@@ -71,7 +71,7 @@ Related:
 
 The first [`CallbackRef`](https://reactjs.org/docs/refs-and-the-dom.html#callback-refs) should be used to define `root`, ie. an ancestor containing the `Element`s to observe, defined with the second callback ref obtained by executing the higher order function with an identifier for each `Element` to observe.
 
-Both should be used. `root` will default to `null` (ie. [`document`](https://w3c.github.io/IntersectionObserver/#intersectionobserver-intersection-root)) when the corresponding callback ref is executed without an argument. `null` can't be used to set `document` as `root` since React will execute the callback ref with `null` when the component unmounts.
+Both should be used. `root` will default to `null` (ie. [`document`](https://w3c.github.io/IntersectionObserver/#intersectionobserver-intersection-root)) when the corresponding callback ref is executed without an argument. `null` can't be used to set `root` to `document` because React will execute the callback ref with `null` before unmount, if it's used as a ref prop.
 
 `Ref` is a React object ref containing the current `IntersectionObserver`. It can be used eg. to manually unobserve a target after a first intersection.
 
@@ -154,7 +154,7 @@ Depending on the scroll direction, it prevents the default scroll behavior and s
 
 The first [`CallbackRef`](https://reactjs.org/docs/refs-and-the-dom.html#callback-refs) should be used to define `root`, ie. an ancestor containing the `Element`s to scroll into view, defined with the second callback ref, obtained by executing the higher order function with a unique identifier for each `Element` to scroll into view.
 
-Both should be used. To set `document` as `root`, the corresponding callback ref should be executed without an argument. See [`useIntersectionObserver`](#useIntersectionObserver) to know why, as it is used to set the previous/next `Element` to scroll into view when an `Element` enters in the viewport of `root`.
+Both should be used. To set `document` as `root`, the corresponding callback ref should be executed without an argument. See [`useIntersectionObserver`](#useIntersectionObserver) to know why, since this hook is used to set the previous/next `Element` to scroll into view when an `Element` enters in the viewport of `root`.
 
 `Ref` is a React object ref containing the current `IntersectionObserver`.
 
