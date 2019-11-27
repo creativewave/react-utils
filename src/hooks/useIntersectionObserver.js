@@ -43,7 +43,7 @@ class IntersectionObserversCache {
         this.observers = this.observers.filter(o => o !== observer)
     }
 }
-const observers = new IntersectionObserversCache()
+export const observers = new IntersectionObserversCache()
 
 /**
  * handleIntersection :: Callbacks -> ([IntersectionObserverEntry] -> IntersectionObserver) -> void
