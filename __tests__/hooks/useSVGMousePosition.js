@@ -4,48 +4,42 @@ import React from 'react'
 import { act } from 'react-dom/test-utils'
 import useSVGMousePosition from '../../src/hooks/useSVGMousePosition'
 
-const spy = jest.spyOn(Element.prototype, 'getBoundingClientRect')
-let container = null
+jest.spyOn(Element.prototype, 'getBoundingClientRect')
+    .mockReturnValue({ height: 1, width: 1, x: 1, y: 1 })
 
-beforeAll(() => {
-    spy.mockReturnValue({ height: 1, width: 1, x: 1, y: 1 })
-})
-beforeEach(() => {
-    container = document.createElement('div')
-    document.body.appendChild(container)
-})
-afterEach(() => {
-    unmountComponentAtNode(container)
-    container.remove()
-    container = null
-    spy.mockClear()
-})
 afterAll(() => {
-    spy.mockRestore()
+    jest.restoreAllMocks()
 })
 
+/**
+ * Memo: React will call twice a callback ref defined in a ref prop if it has
+ * been updated since the previous render, once with `null` then with current
+ * (Fiber) `node`, thus acting as initialization/cleanup effects that should be
+ * triggered either (both) when a dependency of those effects has been updated
+ * or (one of them) when the component receiving this ref will mount/unmount.
+ */
 const cases = [
-    ['set target via ref prop', () => {
+    ['set target via ref prop', ({ precision }) => {
 
-        const [position, target] = useSVGMousePosition()
+        const [position, target] = useSVGMousePosition({ precision })
 
         return (
-            <svg id='root-target' ref={target} viewBox='0 0 1 1'>
+            <svg id='root' ref={target} viewBox='0 0 1 1'>
                 <rect id='rect' x={position.x} y={position.y} />
             </svg>)
     }],
-    ['set fixed target via ref prop', () => {
+    ['set target (fixed) via ref prop', ({ precision }) => {
 
-        const [position, target] = useSVGMousePosition({ isFixed: true })
+        const [position, target] = useSVGMousePosition({ isFixed: true, precision })
 
         return (
-            <svg id='root-target' ref={target} viewBox='0 0 1 1'>
+            <svg id='root' ref={target} viewBox='0 0 1 1'>
                 <rect id='rect' x={position.x} y={position.y} />
             </svg>)
     }],
-    ['set root and target via ref props', () => {
+    ['set target and root via ref props', ({ precision }) => {
 
-        const [position, target, root] = useSVGMousePosition({ hasRoot: true })
+        const [position, target, root] = useSVGMousePosition({ hasRoot: true, precision })
 
         return (
             <div id='root' ref={root}>
@@ -54,11 +48,41 @@ const cases = [
                 </svg>
             </div>)
     }],
-    ['set root in useEffect()', () => {
+    ['set target in useEffect()', ({ precision }) => {
 
-        const [position, target, setRoot] = useSVGMousePosition({ hasRoot: true })
+        const [position, setTarget] = useSVGMousePosition({ precision })
 
-        React.useEffect(() => setRoot(document.querySelector('#root')), [setRoot])
+        React.useEffect(() => {
+            setTarget(document.getElementById('root'))
+            // Reproduce the behavior of an updated callback ref (see memo above)
+            return () => setTarget(null)
+        }, [setTarget])
+
+        return (
+            <svg id='root' viewBox='0 0 1 1'>
+                <rect id='rect' x={position.x} y={position.y} />
+            </svg>)
+    }],
+    ['set target in useEffect() and root via ref prop', ({ precision }) => {
+
+        const [position, setTarget, root] = useSVGMousePosition({ hasRoot: true, precision })
+
+        // `setTarget` doesn't have to be re-initialized (see memo avove: `root` already handles it)
+        React.useEffect(() => setTarget(document.getElementById('target')), [setTarget])
+
+        return (
+            <div id='root' ref={root}>
+                <svg id='target' viewBox='0 0 1 1'>
+                    <rect id='rect' x={position.x} y={position.y} />
+                </svg>
+            </div>)
+    }],
+    ['set root in useEffect()', ({ precision }) => {
+
+        const [position, target, setRoot] = useSVGMousePosition({ hasRoot: true, precision })
+
+        // `setRoot` doesn't have to be re-initialized (see memo avove: `target` already handles it)
+        React.useEffect(() => setRoot(document.getElementById('root')), [setRoot])
 
         return (
             <div id='root'>
@@ -67,10 +91,11 @@ const cases = [
                 </svg>
             </div>)
     }],
-    ['set root to document in component scope', () => {
+    ['set root to document in component scope', ({ precision }) => {
 
-        const [position, target, setRoot] = useSVGMousePosition({ hasRoot: true })
+        const [position, target, setRoot] = useSVGMousePosition({ hasRoot: true, precision })
 
+        // `setRoot` doesn't have to be re-initialized (see memo avove: `target` already handles it)
         setRoot(document)
 
         return (
@@ -78,45 +103,18 @@ const cases = [
                 <rect id='rect' x={position.x} y={position.y} />
             </svg>)
     }],
-    ['set target in useEffect()', () => {
+    ['set root and target in useEffect()', ({ precision }) => {
 
-        const [position, setTarget, root] = useSVGMousePosition({ hasRoot: true })
-
-        React.useEffect(() => setTarget(document.querySelector('#target')), [setTarget])
-
-        return (
-            <div id='root' ref={root}>
-                <svg id='target' viewBox='0 0 1 1'>
-                    <rect id='rect' x={position.x} y={position.y} />
-                </svg>
-            </div>)
-    }],
-    ['set root and target in useEffect()', () => {
-
-        const [position, setTarget, setRoot] = useSVGMousePosition()
+        const [position, setTarget, setRoot] = useSVGMousePosition({ precision })
 
         React.useEffect(
             () => {
-                setRoot(document.querySelector('#root'))
-                setTarget(document.querySelector('#svg'))
-            },
-            [setRoot, setTarget])
-
-        return (
-            <div id='root'>
-                <svg id='svg' viewBox='0 0 1 1'>
-                    <rect id='rect' x={position.x} y={position.y} />
-                </svg>
-            </div>)
-    }],
-    ['set target and root in useEffect()', () => {
-
-        const [position, setTarget, setRoot] = useSVGMousePosition({ hasRoot: true })
-
-        React.useEffect(
-            () => {
-                setTarget(document.querySelector('#target'))
-                setRoot(document.querySelector('#root'))
+                setRoot(document.getElementById('root'))
+                setTarget(document.getElementById('target'))
+                return () => {
+                    // `setTarget` doesn't have to be re-initialized (see memo avove: `setRoot` already handles it)
+                    setRoot(null)
+                }
             },
             [setRoot, setTarget])
 
@@ -127,14 +125,37 @@ const cases = [
                 </svg>
             </div>)
     }],
-    ['set target on consecutive updates in useEffect()', () => {
+    ['set target and root in useEffect()', ({ precision }) => {
 
-        const [position, setTarget, root] = useSVGMousePosition({ hasRoot: true })
+        const [position, setTarget, setRoot] = useSVGMousePosition({ hasRoot: true, precision })
+
+        React.useEffect(
+            () => {
+                setTarget(document.getElementById('target'))
+                setRoot(document.getElementById('root'))
+                return () => {
+                    // `setTarget` doesn't have to be re-initialized (see memo avove: `setRoot` already handles it)
+                    setRoot(null)
+                }
+            },
+            [setRoot, setTarget])
+
+        return (
+            <div id='root'>
+                <svg id='target' viewBox='0 0 1 1'>
+                    <rect id='rect' x={position.x} y={position.y} />
+                </svg>
+            </div>)
+    }],
+    ['set target on consecutive updates in useEffect()', ({ precision }) => {
+
+        const [position, setTarget, root] = useSVGMousePosition({ hasRoot: true, precision })
         const [forcedUpdate, forceUpdate] = React.useState(true)
 
         React.useEffect(
             () => {
-                setTarget(document.querySelector('#target'))
+                setTarget(document.getElementById('target'))
+                // `setTarget` doesn't have to be re-initialized (see memo avove: `root` already handles it)
             },
             [forcedUpdate, setTarget])
         React.useEffect(forceUpdate, [])
@@ -148,54 +169,96 @@ const cases = [
     }],
 ]
 
-it.each(cases)('returns expected positions [%s]', async (caseName, Test) => {
+describe.each(cases)('useSVGMousePosition [%s]', (caseName, Test) => {
 
-    let root
+    let container
     let rect
+    let root
 
-    // 1. Render
-    act(() => {
-        render(<Test />, container)
-        rect = container.querySelector('#rect')
-        switch (caseName) {
-            case 'set target via ref prop':
-            case 'set fixed target via ref prop':
-                root = container.querySelector('#root-target')
-                break
-            case 'set root to document in component scope':
-                root = document
-                break
-            default:
-                root = container.querySelector('#root')
-                break
-        }
-        root.scrollTop = 0
-        root.scrollLeft = 0
+    beforeAll(() => {
+        container = document.createElement('div')
+        document.body.appendChild(container)
+    })
+    afterEach(() => {
+        jest.clearAllMocks()
+    })
+    afterAll(() => {
+        unmountComponentAtNode(container)
+        container.remove()
+        container = null
     })
 
-    expect(rect.getAttribute('x')).toBe('0')
-    expect(rect.getAttribute('y')).toBe('0')
+    it('returns the initial position on mount', () => {
 
-    // 2. Hover over root (but not over target)
-    await act(async () => {
-        root.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: 0, clientY: 0 }))
+        act(() => {
+            render(<Test precision={2} />, container)
+            rect = container.querySelector('#rect')
+            root = container.querySelector('#root') || document
+            root.scrollTop = 0
+            root.scrollLeft = 0
+            jest.spyOn(root, 'addEventListener')
+            jest.spyOn(root, 'removeEventListener')
+        })
+
+        expect(rect.getAttribute('x')).toBe('0')
+        expect(rect.getAttribute('y')).toBe('0')
     })
 
-    expect(rect.getAttribute('x')).toBe('-1')
-    expect(rect.getAttribute('y')).toBe('-1')
+    it('returns the mouse position on mousemove over target', async () => {
 
-    // 3. Scroll down and right
-    await act(async () => {
-        root.scrollTop = 2
-        root.scrollLeft = 2
-        root.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: 0, clientY: 0 }))
+        await act(async () => {
+            root.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: 1, clientY: 1 }))
+        })
+
+        expect(rect.getAttribute('x')).toBe('0')
+        expect(rect.getAttribute('y')).toBe('0')
     })
 
-    if (caseName === 'set fixed target via ref prop') {
+    it('returns the mouse position on mousemove over root but not over target', async () => {
+
+        // Note: this test is meaningless when root === target
+        // (even if it will run successfully)
+        await act(async () => {
+            root.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: 0, clientY: 0 }))
+        })
+
         expect(rect.getAttribute('x')).toBe('-1')
         expect(rect.getAttribute('y')).toBe('-1')
-    } else {
-        expect(rect.getAttribute('x')).toBe('1')
-        expect(rect.getAttribute('y')).toBe('1')
-    }
+    })
+
+    it('returns the mouse position after a scroll and on mousemove over target', async () => {
+
+        await act(async () => {
+            root.scrollTop = 2
+            root.scrollLeft = 2
+            root.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: 0, clientY: 0 }))
+        })
+
+        if (caseName === 'set target (fixed) via ref prop') {
+            expect(rect.getAttribute('x')).toBe('-1')
+            expect(rect.getAttribute('y')).toBe('-1')
+        } else {
+            expect(rect.getAttribute('x')).toBe('1')
+            expect(rect.getAttribute('y')).toBe('1')
+        }
+    })
+
+    it('reinitializes the listener on update of hook option(s)', () => {
+
+        act(() => {
+            render(<Test precision={0} />, container)
+        })
+
+        expect(root.removeEventListener).toHaveBeenCalledTimes(1)
+        expect(root.addEventListener).toHaveBeenCalledTimes(1)
+    })
+
+    it('removes the listener on unmount', () => {
+
+        act(() => {
+            render(null, container)
+        })
+
+        expect(root.removeEventListener).toHaveBeenCalledTimes(1)
+    })
 })
