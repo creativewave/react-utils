@@ -124,7 +124,6 @@ const useScrollIntoView = ({
 } = {}) => {
 
     const cleanup = React.useRef(noop)
-    const didMount = React.useRef(false)
     const isScrolling = React.useRef(false)
     const root = React.useRef()
     const target = React.useRef(-1)
@@ -217,19 +216,6 @@ const useScrollIntoView = ({
             targets.current.push([id, node])
         }),
         [setObserverTarget, targets])
-
-    React.useEffect(
-        () => {
-            if (!didMount.current) {
-                didMount.current = true
-                return
-            }
-            targets.current.forEach(([, id]) => setTarget(id)(null))
-            setRoot(null)
-            targets.current.forEach((target, id) => setTarget(id)(target))
-            setRoot(root.current)
-        },
-        [didMount, root, setRoot, setTarget, targets])
 
     return [setRoot, setTarget, observer]
 }
