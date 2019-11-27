@@ -40,7 +40,7 @@ class IntersectionObserversCache {
      * remove :: IntersectionObserver -> void
      */
     remove(observer) {
-        this.observers = this.observers.filter(o => o !== observer)
+        this.observers = this.observers.filter(([o]) => o === observer ? observer.disconnect() : true)
     }
 }
 export const observers = new IntersectionObserversCache()
@@ -90,7 +90,6 @@ const useIntersectionObserver = ({
 
     DEBUG = debug
 
-    const didMount = React.useRef(false)
     const observer = React.useRef()
     const root = React.useRef()
     const targets = React.useRef([])
@@ -100,14 +99,12 @@ const useIntersectionObserver = ({
             const options = { root: root.current, rootMargin, threshold }
 
             if (node === null) {
-                // (1) Fix HMR with root being unmounted after a forced update and its effect below
-                if (!observer.current) {
-                    return
-                }
-                // (2) Don't disconnect an observer set with document (null) as root
-                // (it may be used by other components)
-                if (root.current !== null) {
-                    observer.current.disconnect()
+                // (1) Don't remove an observer set with document (aka. null) as root
+                //     (it may be used by other components)
+                // (2) Fix HMR error when root is unmounted AFTER a forced update
+                //     (the effect below would trigger twice)
+                if (/* (1) */ root.current !== null && root.current !== document && /* (2) */ observer.current) {
+                    observers.remove(observer.current)
                 }
                 observer.current = root.current = undefined
                 return
@@ -140,26 +137,6 @@ const useIntersectionObserver = ({
             targets.current.push([node, id])
         }),
         [observer, targets])
-
-    React.useEffect(
-        () => {
-            // Only re-initialize on update
-            if (!didMount.current) {
-                didMount.current = true
-                return
-            // Cleanup only if an observer exists
-            } else if (observer.current) {
-                // Don't disconnect an observer set with document (null) as root
-                // (it may be used by other components)
-                if (root.current === null) {
-                    observer.current = undefined
-                } else {
-                    setRoot(null)
-                }
-            }
-            setRoot(root.current)
-        },
-        [didMount, observer, root, setRoot])
 
     return [setRoot, setTarget, observer]
 }

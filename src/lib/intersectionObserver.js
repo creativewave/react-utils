@@ -18,12 +18,13 @@ export default (typeof window === 'undefined' || typeof window.IntersectionObser
 
             this.callback = callback
             this.entries = []
+            this.root = root
             this.scrollPosition = 0
 
-            if (root === null) {
-                root = document
+            if (this.root === null) {
+                this.root = document
             }
-            root.addEventListener('wheel', this._listen.bind(this))
+            this.root.addEventListener('wheel', this._listen.bind(this))
         }
 
         _listen(event) {
@@ -83,7 +84,7 @@ export default (typeof window === 'undefined' || typeof window.IntersectionObser
 
         disconnect() {
             this.entries = []
-            document.removeEventListener('wheel', this._listen)
+            this.root.removeEventListener('wheel', this.onWheel)
         }
 
     }
