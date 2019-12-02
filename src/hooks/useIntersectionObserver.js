@@ -14,8 +14,15 @@ class IntersectionObserversCache {
     }
 
     /**
-     * get :: IntersectionObserverOptions -> IntersectionObserver
+     * clear :: void -> void
+     *
+     * Memo: it resets observers property to its initial value, as a cleanup
+     * function to execute after each test case.
      */
+    clear() {
+        this.observers = []
+    }
+
     get(options) {
         const [observer] = this.observers.find(([, observerOptions]) =>
             Object
@@ -29,10 +36,21 @@ class IntersectionObserversCache {
      * set :: (([IntersectionObserverEntry] -> IntersectionObserver -> void) -> IntersectionObserverOptions)
      *     -> IntersectionObserver
      */
-    set(callback, options) {
-        // eslint-disable-next-line compat/compat
-        const observer = new IntersectionObserver(callback, options)
+    set(options) {
+
+        const { onEnter, onExit, ...observerOptions } = options
+        const observer = new IntersectionObserver( // eslint-disable-line compat/compat
+            (entries, observer) =>
+                entries.forEach(entry => {
+                    log('[use-intersection-observer]', DEBUG, entry, observer)
+                    entry.isIntersecting
+                        ? onEnter(entry, observer)
+                        : onExit(entry, observer)
+                }),
+            observerOptions)
+
         this.observers.push([observer, options])
+
         return observer
     }
 
@@ -44,22 +62,6 @@ class IntersectionObserversCache {
     }
 }
 export const observers = new IntersectionObserversCache()
-
-/**
- * handleIntersection :: Callbacks -> ([IntersectionObserverEntry] -> IntersectionObserver) -> void
- *
- * Callbacks => {
- *   onEnter?: (IntersectionObserverEntry -> IntersectionObserver) -> void,
- *   onExit?: (IntersectionObserverEntry -> IntersectionObserver) -> void,
- * }
- */
-const handleIntersection = ({ onEnter, onExit }) => (entries, observer) =>
-    entries.forEach(entry => {
-        log('[use-intersection-observer]', DEBUG, entry, observer)
-        entry.isIntersecting
-            ? onEnter(entry, observer)
-            : onExit(entry, observer)
-    })
 
 /**
  * useIntersectionObserver :: Configuration -> [CallbackRef, CallbackRef, IntersectionObserver]
@@ -96,26 +98,26 @@ const useIntersectionObserver = ({
     const setRoot = React.useCallback(
         node => {
 
-            const options = { root: root.current, rootMargin, threshold }
+            const options = { onEnter, onExit, root: root.current, rootMargin, threshold }
 
             if (node === null) {
-                // (1) Don't remove an observer set with document (aka. null) as root
-                //     (it may be used by other components)
-                // (2) Fix HMR error when root is unmounted AFTER a forced update
-                //     (the effect below would trigger twice)
-                if (/* (1) */ root.current !== null && root.current !== document && /* (2) */ observer.current) {
+                // Don't remove an observer that has document (null) as root
+                // (it may be used by other components)
+                if (root.current === null) {
+                    targets.current.forEach(([target]) => observer.current.unobserve(target))
+                } else {
                     observers.remove(observer.current)
                 }
                 observer.current = root.current = undefined
                 return
-            } else if ((root.current === node && typeof node !== 'undefined')
-                || (root.current === null && typeof node === 'undefined')) {
+            } else if (observer.current) {
                 return
             }
 
-            options.root = root.current = node || null
-            observer.current = observers.get(options)
-                || observers.set(handleIntersection({ onEnter, onExit }), options)
+            // Handle `setRoot(document)` (root requires Element|null)
+            // Handle `setRoot()` (undefined -> null)
+            options.root = root.current = node === document ? null : (node || null)
+            observer.current = observers.get(options) || observers.set(options)
             targets.current.forEach(([target]) => observer.current.observe(target))
         },
         [observer, onEnter, onExit, root, rootMargin, targets, threshold])

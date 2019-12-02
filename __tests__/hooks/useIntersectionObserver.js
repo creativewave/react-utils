@@ -17,6 +17,7 @@ afterEach(() => {
     unmountComponentAtNode(container)
     container.remove()
     container = null
+    observers.clear()
     jest.clearAllMocks()
 })
 afterAll(() => {
