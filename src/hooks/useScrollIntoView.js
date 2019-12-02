@@ -80,10 +80,13 @@ const addEventListeners = (root, onScroll, isScrolling) => {
  *
  * Configuration => {
  *   beforeScroll?: (Number -> Number -> String) -> Number|void,
+ *   debug?: Boolean,
  *   delay?: Number,
  *   mode?: String,
  *   onEnter?: (IntersectionObserverEntry -> IntersectionObserver) -> void,
  *   onExit?: (IntersectionObserverEntry -> IntersectionObserver) -> void,
+ *   rootMargin?: String,
+ *   threshold?: Number,
  *   wait?: Number,
  * }
  * CallbackRef :: Element?|null -> void
@@ -206,7 +209,20 @@ const useScrollIntoView = ({
             }
             cleanup.current = addEventListeners(root.current = node || document, onScroll, isScrolling)
         },
-        [beforeScroll, debug, delay, isScrolling, mode, root, setCurrentTarget, setObserverRoot, target, targets, wait])
+        [
+            beforeScroll,
+            debug,
+            delay,
+            directions,
+            isScrolling,
+            mode,
+            root,
+            setCurrentTarget,
+            setObserverRoot,
+            target,
+            targets,
+            wait,
+        ])
     const setTarget = React.useCallback(
         memoize(id => node => {
 
