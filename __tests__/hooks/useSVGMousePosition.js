@@ -4,9 +4,21 @@ import React from 'react'
 import { act } from 'react-dom/test-utils'
 import useSVGMousePosition from '../../src/hooks/useSVGMousePosition'
 
+let container
+
 jest.spyOn(Element.prototype, 'getBoundingClientRect')
     .mockReturnValue({ height: 1, width: 1, x: 1, y: 1 })
 
+beforeEach(() => {
+    container = document.createElement('div')
+    document.body.appendChild(container)
+})
+afterEach(() => {
+    unmountComponentAtNode(container)
+    container.remove()
+    container = null
+    jest.clearAllMocks()
+})
 afterAll(() => {
     jest.restoreAllMocks()
 })
@@ -169,96 +181,70 @@ const cases = [
     }],
 ]
 
-describe.each(cases)('useSVGMousePosition [%s]', (caseName, Test) => {
+it.each(cases)('%s', (caseName, Test) => {
 
-    let container
     let rect
     let root
 
-    beforeAll(() => {
-        container = document.createElement('div')
-        document.body.appendChild(container)
-    })
-    afterEach(() => {
-        jest.clearAllMocks()
-    })
-    afterAll(() => {
-        unmountComponentAtNode(container)
-        container.remove()
-        container = null
+    // 1. It returns the initial position on mount
+    act(() => {
+        render(<Test precision={2} />, container)
+        rect = container.querySelector('#rect')
+        root = container.querySelector('#root') || document
+        root.scrollTop = 0
+        root.scrollLeft = 0
+        jest.spyOn(root, 'addEventListener')
+        jest.spyOn(root, 'removeEventListener')
     })
 
-    it('returns the initial position on mount', () => {
+    expect(rect.getAttribute('x')).toBe('0')
+    expect(rect.getAttribute('y')).toBe('0')
 
-        act(() => {
-            render(<Test precision={2} />, container)
-            rect = container.querySelector('#rect')
-            root = container.querySelector('#root') || document
-            root.scrollTop = 0
-            root.scrollLeft = 0
-            jest.spyOn(root, 'addEventListener')
-            jest.spyOn(root, 'removeEventListener')
-        })
-
-        expect(rect.getAttribute('x')).toBe('0')
-        expect(rect.getAttribute('y')).toBe('0')
+    // 2. It returns the mouse position on mousemove over target
+    await act(async () => {
+        root.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: 1, clientY: 1 }))
     })
 
-    it('returns the mouse position on mousemove over target', async () => {
+    expect(rect.getAttribute('x')).toBe('0')
+    expect(rect.getAttribute('y')).toBe('0')
 
-        await act(async () => {
-            root.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: 1, clientY: 1 }))
-        })
-
-        expect(rect.getAttribute('x')).toBe('0')
-        expect(rect.getAttribute('y')).toBe('0')
+    // 3. It returns the mouse position on mousemove over root but not over target
+    // Note: this test is meaningless when root === target
+    // (even if it will run successfully)
+    await act(async () => {
+        root.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: 0, clientY: 0 }))
     })
 
-    it('returns the mouse position on mousemove over root but not over target', async () => {
+    expect(rect.getAttribute('x')).toBe('-1')
+    expect(rect.getAttribute('y')).toBe('-1')
 
-        // Note: this test is meaningless when root === target
-        // (even if it will run successfully)
-        await act(async () => {
-            root.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: 0, clientY: 0 }))
-        })
+    // 4. It returns the mouse position after a scroll and on mousemove over target
+    await act(async () => {
+        root.scrollTop = 2
+        root.scrollLeft = 2
+        root.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: 0, clientY: 0 }))
+    })
 
+    if (caseName === 'set target (fixed) via ref prop') {
         expect(rect.getAttribute('x')).toBe('-1')
         expect(rect.getAttribute('y')).toBe('-1')
+    } else {
+        expect(rect.getAttribute('x')).toBe('1')
+        expect(rect.getAttribute('y')).toBe('1')
+    }
+
+    // 5. It reinitializes the listener on update of hook option(s)
+    act(() => {
+        render(<Test precision={0} />, container)
     })
 
-    it('returns the mouse position after a scroll and on mousemove over target', async () => {
+    expect(root.removeEventListener).toHaveBeenCalledTimes(1)
+    expect(root.addEventListener).toHaveBeenCalledTimes(1)
 
-        await act(async () => {
-            root.scrollTop = 2
-            root.scrollLeft = 2
-            root.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: 0, clientY: 0 }))
-        })
-
-        if (caseName === 'set target (fixed) via ref prop') {
-            expect(rect.getAttribute('x')).toBe('-1')
-            expect(rect.getAttribute('y')).toBe('-1')
-        } else {
-            expect(rect.getAttribute('x')).toBe('1')
-            expect(rect.getAttribute('y')).toBe('1')
-        }
+    // 6. It removes the listener on unmount
+    act(() => {
+        render(null, container)
     })
 
-    it('reinitializes the listener on update of hook option(s)', () => {
-
-        act(() => {
-            render(<Test precision={0} />, container)
-        })
-
-        expect(root.removeEventListener).toHaveBeenCalledTimes(1)
-        expect(root.addEventListener).toHaveBeenCalledTimes(1)
-    })
-
-    it('removes the listener on unmount', () => {
-
-        act(() => {
-            render(null, container)
-        })
-
-        expect(root.removeEventListener).toHaveBeenCalledTimes(1)
-    })
+    expect(root.removeEventListener).toHaveBeenCalledTimes(1)
 })
