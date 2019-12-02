@@ -7,9 +7,12 @@ import noop from '../lib/noop'
 import useIntersectionObserver from './useIntersectionObserver'
 
 /**
- * getScrollDirection :: (Event -> Position?) -> Number
+ * getScrollDirection :: (Event -> Position?) -> [Number, String]
  *
  * Position => { x: Number, y: Number }
+ *
+ * It should return scroll direction as a `Number` (raw value) and as a `String`
+ * (up, down, left, or right).
  *
  * TODO (better handle wheel events):
  * https://github.com/Promo/wheel-indicator/blob/master/lib/wheel-indicator.js#L109
@@ -26,8 +29,8 @@ const getScrollDirection = (event, previousTouch = {}) => {
     if (event.type === 'touchmove' && (Math.abs(move.x) + Math.abs(move.y)) < 150) return 0
 
     return Math.abs(move.x) > Math.abs(move.y)
-        ? move.x > 0 ? 1 : -1
-        : move.y > 0 ? 1 : -1
+        ? move.x > 0 ? [1, 'right'] : [-1, 'left']
+        : move.y > 0 ? [1, 'down'] : [-1, 'up']
 }
 
 /**
@@ -161,15 +164,16 @@ const useScrollIntoView = ({
 
             const onScroll = (event, firstTouch) => {
 
-                const direction = getScrollDirection(event, firstTouch)
+                const [direction, alias] = getScrollDirection(event, firstTouch)
+
                 const nextIndex = target.current + direction
-                const userNextIndex = beforeScroll(nextIndex, target.current, direction)
+                const userNextIndex = beforeScroll(nextIndex, target.current, alias)
                 const scrollTarget = (targets.current[userNextIndex] && targets.current[userNextIndex][1])
                     || (targets.current[nextIndex] && targets.current[nextIndex][1])
 
                 log('[use-scroll-into-view]', debug, {
                     currentIndex: target.current,
-                    direction,
+                    direction: `${alias} (${direction})`,
                     nextIndex,
                     target: scrollTarget,
                     userNextIndex,
@@ -206,14 +210,13 @@ const useScrollIntoView = ({
     const setTarget = React.useCallback(
         memoize(id => node => {
 
+            targets.current.push([id, node])
             setObserverTarget(id)(node)
 
             if (node === null) {
-                targets.current = targets.current.filter(([nodeId]) => nodeId !== id)
+                targets.current = targets.current.filter(([, node]) => node === null)
                 return
             }
-
-            targets.current.push([id, node])
         }),
         [setObserverTarget, targets])
 
