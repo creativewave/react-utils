@@ -43,7 +43,9 @@ const Mock = class IntersectionObserver { // eslint-disable-line no-undef
             const entries = this._getIntersectingEntries(this.entries[entryIndex], entryIndex)
             if (entries.length > 0) {
                 hasIntersection = true
-                this.callback(entries, this)
+                // Memo: wrap it in setTimeout to make sure a "beforeScroll"
+                // callback is run before an "onEnter" callback (after scroll)
+                setTimeout(() => this.callback(entries, this), 0)
             }
         }
     }
