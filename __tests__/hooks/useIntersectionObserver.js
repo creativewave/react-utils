@@ -111,6 +111,17 @@ const cases = [
                 {targets.map(id => <div key={id} id={id} />)}
             </div>)
     }],
+    ['set root to undefined in useEffect()', ({ targets, onEnter, onExit, threshold }) => {
+
+        const [setRoot, setTarget] = useIntersectionObserver({ onEnter, onExit, threshold })
+
+        React.useEffect(() => {
+            setRoot()
+            return () => setRoot(null)
+        }, [setRoot])
+
+        return <div>{targets.map(id => <div key={id} ref={setTarget(id)} id={id} />)}</div>
+    }],
     ['set root to document in useEffect()', ({ targets, onEnter, onExit, threshold }) => {
 
         const [setRoot, setTarget] = useIntersectionObserver({ onEnter, onExit, threshold })
