@@ -10,6 +10,8 @@ let container
 beforeEach(() => {
     container = document.createElement('div')
     document.body.appendChild(container)
+    // (1) The mock of IntersectionObserver uses `setTimeout(IntersectionObserverCallback, 0)`
+    jest.useFakeTimers()
 })
 afterEach(() => {
     unmountComponentAtNode(container)
@@ -155,6 +157,7 @@ it.each(cases)('%s', (_, Test) => {
     // 2. Executes onOnter() and onExit() after a scroll event in root
     act(() => {
         observerOptions.root.dispatchEvent(new WheelEvent('wheel', { deltaY: 1 }))
+        jest.runOnlyPendingTimers() /* (1) */
     })
 
     expect(onEnter).toHaveBeenCalledTimes(1)
