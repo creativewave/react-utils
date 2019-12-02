@@ -82,6 +82,7 @@ const addEventListeners = (root, onScroll, isScrolling) => {
  *   beforeScroll?: (Number -> Number -> String) -> Number|void,
  *   debug?: Boolean,
  *   delay?: Number,
+ *   directions?: String,
  *   mode?: String,
  *   onEnter?: (IntersectionObserverEntry -> IntersectionObserver) -> void,
  *   onExit?: (IntersectionObserverEntry -> IntersectionObserver) -> void,
@@ -116,11 +117,14 @@ const addEventListeners = (root, onScroll, isScrolling) => {
  * Memo: conceptualize the sequence of target indexes as a serie of numbers like
  * `|-1  0 1 2 3  4|`, where -1 and 4 represents a state without a target in
  * view, and 0 to 3 represent the state of the current target index in view.
+ *
+ * TODO: add demo using both directions, like a chessboard.
  */
 const useScrollIntoView = ({
     beforeScroll = noop,
     debug,
     delay = 200,
+    directions = 'y',
     mode = 'smooth',
     onEnter = noop,
     onExit,
@@ -169,6 +173,11 @@ const useScrollIntoView = ({
 
                 const [direction, alias] = getScrollDirection(event, firstTouch)
 
+                if ((direction === 'x' && directions === 'y') || (direction === 'y' && directions === 'x')) {
+                    isScrolling.current = false
+                    return
+                }
+
                 const nextIndex = target.current + direction
                 const userNextIndex = beforeScroll(nextIndex, target.current, alias)
                 const scrollTarget = (targets.current[userNextIndex] && targets.current[userNextIndex][1])
@@ -185,13 +194,23 @@ const useScrollIntoView = ({
 
                 if (!scrollTarget) {
 
-                    const { clientHeight, scrollHeight, scrollTop } =
-                        root.current === document
-                            ? root.current.body
-                            : root.current
+                    const {
+                        clientHeight,
+                        clientWidth,
+                        scrollLeft,
+                        scrollHeight,
+                        scrollTop,
+                        scrollWidth,
+                    } =
+                        root.current === document ? root.current.body : root.current
 
-                    if (direction < 0 && scrollTop === 0) return
-                    if (direction > 0 && scrollTop + clientHeight === scrollHeight) return
+                    if (directions === 'x' || directions === 'both') {
+                        if (direction < 0 && scrollLeft === 0) return
+                        if (direction > 0 && scrollLeft + clientWidth === scrollWidth) return
+                    } else if (directions === 'y' || directions === 'both') {
+                        if (direction < 0 && scrollTop === 0) return
+                        if (direction > 0 && scrollTop + clientHeight === scrollHeight) return
+                    }
 
                     setCurrentTarget(direction > 0 ? targets.current.length : -1)
                     isScrolling.current = false
