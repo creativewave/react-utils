@@ -181,7 +181,7 @@ const cases = [
     }],
 ]
 
-it.each(cases)('%s', (caseName, Test) => {
+it.each(cases)('%s', async (caseName, Test) => {
 
     let rect
     let root
@@ -190,11 +190,6 @@ it.each(cases)('%s', (caseName, Test) => {
     act(() => {
         render(<Test precision={2} />, container)
         rect = container.querySelector('#rect')
-        root = container.querySelector('#root') || document
-        root.scrollTop = 0
-        root.scrollLeft = 0
-        jest.spyOn(root, 'addEventListener')
-        jest.spyOn(root, 'removeEventListener')
     })
 
     expect(rect.getAttribute('x')).toBe('0')
@@ -202,6 +197,9 @@ it.each(cases)('%s', (caseName, Test) => {
 
     // 2. It returns the mouse position on mousemove over target
     await act(async () => {
+        root = container.querySelector('#root') || document
+        root.scrollTop = 0
+        root.scrollLeft = 0
         root.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: 1, clientY: 1 }))
     })
 
@@ -209,8 +207,7 @@ it.each(cases)('%s', (caseName, Test) => {
     expect(rect.getAttribute('y')).toBe('0')
 
     // 3. It returns the mouse position on mousemove over root but not over target
-    // Note: this test is meaningless when root === target
-    // (even if it will run successfully)
+    // Note: this test is meaningless when root === target (even if it runs successfully)
     await act(async () => {
         root.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: 0, clientY: 0 }))
     })
@@ -233,18 +230,22 @@ it.each(cases)('%s', (caseName, Test) => {
         expect(rect.getAttribute('y')).toBe('1')
     }
 
-    // 5. It reinitializes the listener on update of hook option(s)
+    // 5. It re-initializes the listener after an update of a hook option
     act(() => {
+
+        jest.spyOn(root, 'addEventListener')
+        jest.spyOn(root, 'removeEventListener')
+
         render(<Test precision={0} />, container)
     })
 
     expect(root.removeEventListener).toHaveBeenCalledTimes(1)
     expect(root.addEventListener).toHaveBeenCalledTimes(1)
 
-    // 6. It removes the listener on unmount
+    // 6. It removes the listener before root or target as root unmounts
     act(() => {
         render(null, container)
     })
 
-    expect(root.removeEventListener).toHaveBeenCalledTimes(1)
+    expect(root.removeEventListener).toHaveBeenCalledTimes(2)
 })
