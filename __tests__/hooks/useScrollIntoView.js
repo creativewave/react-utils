@@ -6,6 +6,18 @@ import { act } from 'react-dom/test-utils'
 import { observers } from '../../src/hooks/useIntersectionObserver'
 import useScrollIntoView from '../../src/hooks/useScrollIntoView'
 
+let container
+
+beforeEach(() => {
+    container = document.createElement('div')
+    document.body.appendChild(container)
+})
+afterEach(() => {
+    unmountComponentAtNode(container)
+    container.remove()
+    container = null
+    jest.clearAllMocks()
+})
 afterAll(() => {
     jest.restoreAllMocks()
 })
@@ -118,7 +130,6 @@ const events = ['pointerdown', 'pointerup', 'touchstart', 'touchmove', 'wheel']
 describe.each(cases)('useScrollIntoView [%s]', (caseName, Test) => {
 
     let beforeScroll
-    let container
     let observer
     let targets = ['target-1', 'target-2', 'target-3', 'target-4']
     let updatedObserver
@@ -127,132 +138,107 @@ describe.each(cases)('useScrollIntoView [%s]', (caseName, Test) => {
     const onEnter = jest.fn()
     const onExit = jest.fn()
 
-    beforeAll(() => {
-        container = document.createElement('div')
-        document.body.appendChild(container)
+    // 1. It executes onOnter() or onExit() for each mounted target
+    act(() => {
+        beforeScroll = jest.fn(index => index)
+        render(
+            <Test
+                beforeScroll={beforeScroll}
+                targets={targets}
+                onEnter={onEnter}
+                onExit={onExit} />,
+            container)
     })
-    afterEach(() => {
-        jest.clearAllMocks()
+
+    observerOptions.root = container.querySelector('#root') || document
+    observer = observers.get(observerOptions)
+    jest.spyOn(observer, 'observe')
+    jest.spyOn(observer, 'disconnect')
+    jest.spyOn(observerOptions.root, 'addEventListener')
+    jest.spyOn(observerOptions.root, 'removeEventListener')
+
+    expect(onEnter).toHaveBeenCalledTimes(1)
+    expect(onExit).toHaveBeenCalledTimes(targets.length - 1)
+
+    // 2. It execute beforeScroll(), onOnter() or onExit() after a scroll event in root
+    act(() => {
+        observerOptions.root.dispatchEvent(new WheelEvent('wheel', { deltaY: 1 }))
     })
-    afterAll(() => {
-        unmountComponentAtNode(container)
-        container.remove()
-        container = null
+
+    expect(beforeScroll).toHaveBeenCalledTimes(1)
+    expect(onEnter).toHaveBeenCalledTimes(1)
+    expect(onExit).toHaveBeenCalledTimes(1)
+
+    // 3. It executes observer.observe() and onExit() after mounting an additional target
+    act(() => {
+        targets = targets.concat('target-5')
+        render(
+            <Test
+                beforeScroll={beforeScroll}
+                targets={targets}
+                onEnter={onEnter}
+                onExit={onExit} />,
+            container)
     })
 
-    it('executes onOnter() or onExit() for each mounted target', () => {
+    expect(observer.observe).toHaveBeenCalledTimes(1)
+    expect(onExit).toHaveBeenCalledTimes(1)
 
-        act(() => {
-            beforeScroll = jest.fn(index => index)
-            render(
-                <Test
-                    beforeScroll={beforeScroll}
-                    targets={targets}
-                    onEnter={onEnter}
-                    onExit={onExit} />,
-                container)
-        })
+    // 4. It removes listeners and executes observer.disconnect() then onOnter() or onExit() after an update of a hook option
+    act(() => {
+        render(
+            <Test
+                beforeScroll={beforeScroll = i => i}
+                targets={targets}
+                onEnter={onEnter}
+                onExit={onExit} />,
+            container)
+    })
 
-        observerOptions.root = container.querySelector('#root') || document
-        observer = observers.get(observerOptions)
-        jest.spyOn(observer, 'observe')
-        jest.spyOn(observer, 'disconnect')
-        jest.spyOn(observerOptions.root, 'addEventListener')
-        jest.spyOn(observerOptions.root, 'removeEventListener')
+    updatedObserver = observers.get(observerOptions)
+    jest.spyOn(updatedObserver, 'disconnect')
+    jest.spyOn(updatedObserver, 'unobserve')
 
+    // Note: useIntersectionObserver shouldn't disconnect() when observerOptions.root === document
+    // Note: the mock of IntersectionObserver add a wheel event listener on root and removes it when disconnected
+    // Note: onEnter() and onExit() would be called if the update was on a useIntersectionObserver's option
+    if (observerOptions.root === document) {
+        expect(observerOptions.root.removeEventListener).toHaveBeenCalledTimes(events.length)
+        expect(observerOptions.root.addEventListener).toHaveBeenCalledTimes(events.length)
+    } else {
+        expect(observer.disconnect).toHaveBeenCalledTimes(1)
+        expect(observerOptions.root.removeEventListener).toHaveBeenCalledTimes(events.length + 1)
+        expect(observerOptions.root.addEventListener).toHaveBeenCalledTimes(events.length + 1)
         expect(onEnter).toHaveBeenCalledTimes(1)
         expect(onExit).toHaveBeenCalledTimes(targets.length - 1)
+    }
+
+    // 5. It unobserves an unmounting target
+    act(() => {
+        targets = targets.slice(0, targets.length - 1)
+        render(
+            <Test
+                beforeScroll={beforeScroll}
+                targets={targets}
+                onEnter={onEnter}
+                onExit={onExit} />,
+            container)
     })
 
-    it('execute beforeScroll(), onOnter() or onExit() after a scroll event in root', () => {
+    expect(updatedObserver.unobserve).toHaveBeenCalledTimes(1)
 
-        act(() => {
-            observerOptions.root.dispatchEvent(new WheelEvent('wheel', { deltaY: 1 }))
-        })
-
-        expect(beforeScroll).toHaveBeenCalledTimes(1)
-        expect(onEnter).toHaveBeenCalledTimes(1)
-        expect(onExit).toHaveBeenCalledTimes(1)
+    // 6. It disconnects an observer when root is unmounting
+    act(() => {
+        render(null, container)
     })
 
-    it('executes observer.observe() and onExit() after mounting an additional target', () => {
-
-        act(() => {
-            targets = targets.concat('target-5')
-            render(
-                <Test
-                    beforeScroll={beforeScroll}
-                    targets={targets}
-                    onEnter={onEnter}
-                    onExit={onExit} />,
-                container)
-        })
-
-        expect(observer.observe).toHaveBeenCalledTimes(1)
-        expect(onExit).toHaveBeenCalledTimes(1)
-    })
-
-    it('removes listeners and executes observer.disconnect() then onOnter() or onExit() after an update of a hook option', () => {
-
-        act(() => {
-            render(
-                <Test
-                    beforeScroll={beforeScroll = i => i}
-                    targets={targets}
-                    onEnter={onEnter}
-                    onExit={onExit} />,
-                container)
-        })
-
-        updatedObserver = observers.get(observerOptions)
-        jest.spyOn(updatedObserver, 'disconnect')
-        jest.spyOn(updatedObserver, 'unobserve')
-
-        // Note: useIntersectionObserver shouldn't disconnect() when observerOptions.root === document
-        // Note: the mock of IntersectionObserver add a wheel event listener on root and removes it when disconnected
-        // Note: onEnter() and onExit() would be called if the update was on a useIntersectionObserver's option
-        if (observerOptions.root === document) {
-            expect(observerOptions.root.removeEventListener).toHaveBeenCalledTimes(events.length)
-            expect(observerOptions.root.addEventListener).toHaveBeenCalledTimes(events.length)
-        } else {
-            expect(observer.disconnect).toHaveBeenCalledTimes(1)
-            expect(observerOptions.root.removeEventListener).toHaveBeenCalledTimes(events.length + 1)
-            expect(observerOptions.root.addEventListener).toHaveBeenCalledTimes(events.length + 1)
-            expect(onEnter).toHaveBeenCalledTimes(1)
-            expect(onExit).toHaveBeenCalledTimes(targets.length - 1)
-        }
-    })
-
-    it('unobserves an unmounting target', () => {
-
-        act(() => {
-            targets = targets.slice(0, targets.length - 1)
-            render(
-                <Test
-                    beforeScroll={beforeScroll}
-                    targets={targets}
-                    onEnter={onEnter}
-                    onExit={onExit} />,
-                container)
-        })
-
-        expect(updatedObserver.unobserve).toHaveBeenCalledTimes(1)
-    })
-
-    it('disconnects an observer when root is unmounting', () => {
-
-        act(() => {
-            render(null, container)
-        })
-
-        // Note: see notes in 4.
-        if (observerOptions.root === document) {
-            expect(observers.get(observerOptions)).toBeInstanceOf(IntersectionObserver)
-            expect(observerOptions.root.removeEventListener).toHaveBeenCalledTimes(events.length)
-        } else {
-            expect(updatedObserver.disconnect).toHaveBeenCalledTimes(1)
-            expect(observers.get(observerOptions)).toBeUndefined()
-            expect(observerOptions.root.removeEventListener).toHaveBeenCalledTimes(events.length + 1)
-        }
-    })
+    // Note: see notes in 4.
+    if (observerOptions.root === document) {
+        expect(observers.get(observerOptions)).toBeInstanceOf(IntersectionObserver)
+        expect(observerOptions.root.removeEventListener).toHaveBeenCalledTimes(events.length)
+    } else {
+        expect(updatedObserver.disconnect).toHaveBeenCalledTimes(1)
+        expect(observers.get(observerOptions)).toBeUndefined()
+        expect(observerOptions.root.removeEventListener).toHaveBeenCalledTimes(events.length + 1)
+    }
 })
