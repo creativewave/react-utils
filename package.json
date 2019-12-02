@@ -30,6 +30,7 @@
     "lint": "eslint src __tests__",
     "safe-publish": "npm run lint && npm run test && npm run build && npm publish",
     "test": "jest",
+    "test:inspect": "node --inspect=0.0.0.0:9222 ./node_modules/.bin/jest --watchAll -b",
     "test:report": "jest -i --reporters='jest-junit'",
     "test:watch": "jest --watchAll -b"
   },
