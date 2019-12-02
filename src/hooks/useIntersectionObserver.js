@@ -23,18 +23,28 @@ class IntersectionObserversCache {
         this.observers = []
     }
 
+    /**
+     * get :: IntersectionObserverOptions -> IntersectionObserver|void
+     */
     get(options) {
+
         const [observer] = this.observers.find(([, observerOptions]) =>
             Object
                 .entries(observerOptions)
                 .every(([key, value]) => options[key] === value)) || []
-        return observer
 
+        return observer
     }
 
     /**
-     * set :: (([IntersectionObserverEntry] -> IntersectionObserver -> void) -> IntersectionObserverOptions)
-     *     -> IntersectionObserver
+     * set :: {
+     *   onEnter: IntersectionObserverCallback,
+     *   onExit: IntersectionObserverCallback,
+     *   ...IntersectionObserverOptions,
+     * }
+     * -> IntersectionObserver
+     *
+     * IntersectionObserverCallback :: (IntersectionObserverEntry -> IntersectionObserver) -> void
      */
     set(options) {
 
@@ -74,13 +84,11 @@ export const observers = new IntersectionObserversCache()
  * }
  * CallbackRef :: Element?|null -> void
  *
- * It should use a single observer per unique set of options given as arguments.
+ * It should use a single observer per unique set of intersectin's callbacks and
+ * observer options given as arguments, by using them as a key to get instances
+ * from `IntersectionObserverOptions`, ie. the cache handler.
  *
- * It should use a single callback for all observer instances.
- *
- * It should unobserve a target when its component unmouts.
- *
- * It should disconnect a root component when it unmounts.
+ * TODO: add unit tests for above expectation.
  */
 const useIntersectionObserver = ({
     debug = false,
