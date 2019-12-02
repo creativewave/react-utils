@@ -32,18 +32,18 @@ afterAll(() => {
  * or (one of them) when the component receiving this ref will mount/unmount.
  */
 const cases = [
-    ['set root and targets via ref props', ({ targets, onEnter, onExit, threshold }) => {
+    ['set root and targets via ref props', ({ config, targets }) => {
 
-        const [root, setTarget] = useIntersectionObserver({ onEnter, onExit, threshold })
+        const [root, setTarget] = useIntersectionObserver(config)
 
         return (
             <div ref={root} id='root'>
                 {targets.map(id => <div key={id} ref={setTarget(id)} id={id} />)}
             </div>)
     }],
-    ['set root in useEffect()', ({ targets, onEnter, onExit, threshold }) => {
+    ['set root in useEffect()', ({ config, targets }) => {
 
-        const [setRoot, setTarget] = useIntersectionObserver({ onEnter, onExit, threshold })
+        const [setRoot, setTarget] = useIntersectionObserver(config)
 
         React.useEffect(
             () => {
@@ -57,9 +57,9 @@ const cases = [
                 {targets.map(id => <div key={id} ref={setTarget(id)} id={id} />)}
             </div>)
     }],
-    ['set targets in useEffect()', ({ targets, onEnter, onExit, threshold }) => {
+    ['set targets in useEffect()', ({ config, targets }) => {
 
-        const [root, setTarget] = useIntersectionObserver({ onEnter, onExit, threshold })
+        const [root, setTarget] = useIntersectionObserver(config)
         const prevTargets = React.useRef([])
 
         React.useEffect(
@@ -80,9 +80,9 @@ const cases = [
                 {targets.map(id => <div key={id} id={id} />)}
             </div>)
     }],
-    ['set root and targets in useEffect()', ({ targets, onEnter, onExit, threshold }) => {
+    ['set root and targets in useEffect()', ({ config, targets }) => {
 
-        const [setRoot, setTarget] = useIntersectionObserver({ onEnter, onExit, threshold })
+        const [setRoot, setTarget] = useIntersectionObserver(config)
         const prevTargets = React.useRef([])
 
         React.useEffect(
@@ -112,9 +112,9 @@ const cases = [
                 {targets.map(id => <div key={id} id={id} />)}
             </div>)
     }],
-    ['set root to undefined in useEffect()', ({ targets, onEnter, onExit, threshold }) => {
+    ['set root to undefined in useEffect()', ({ config, targets }) => {
 
-        const [setRoot, setTarget] = useIntersectionObserver({ onEnter, onExit, threshold })
+        const [setRoot, setTarget] = useIntersectionObserver(config)
 
         React.useEffect(() => {
             setRoot()
@@ -123,9 +123,9 @@ const cases = [
 
         return <div>{targets.map(id => <div key={id} ref={setTarget(id)} id={id} />)}</div>
     }],
-    ['set root to document in useEffect()', ({ targets, onEnter, onExit, threshold }) => {
+    ['set root to document in useEffect()', ({ config, targets }) => {
 
-        const [setRoot, setTarget] = useIntersectionObserver({ onEnter, onExit, threshold })
+        const [setRoot, setTarget] = useIntersectionObserver(config)
 
         React.useEffect(() => {
             setRoot(document)
@@ -139,101 +139,97 @@ const cases = [
 it.each(cases)('%s', (_, Test) => {
 
     let observer
-    let updatedObserver
+    let onEnterCount = 0
+    let onExitCount = 0
+    let root
     let targets = ['target-1', 'target-2', 'target-3', 'target-4']
 
-    const observerOptions = { rootMargin: '0px', threshold: 0 }
-    const onEnter = jest.fn()
-    const onExit = jest.fn()
+    const config = {
+        onEnter: jest.fn(),
+        onExit: jest.fn(),
+        rootMargin: '0px',
+        threshold: 0,
+    }
 
-    // 1. Executes onOnter() or onExit() for each mounted target', async () => {
+    // 1. It executes onOnter() or onExit() for each mounted target when mounting root
     act(() => {
-        render(
-            <Test
-                targets={targets}
-                onEnter={onEnter}
-                onExit={onExit}
-                threshold={observerOptions.threshold} />,
-            container)
+        render(<Test config={config} targets={targets} />, container)
     })
 
-    observerOptions.root = container.querySelector('#root') || document
-    observer = observers.get(observerOptions)
-    jest.spyOn(observer, 'disconnect')
-    jest.spyOn(observer, 'observe')
-    jest.spyOn(observer, 'unobserve')
+    expect(config.onEnter).toHaveBeenCalledTimes(++onEnterCount)
+    expect(config.onExit).toHaveBeenCalledTimes(onExitCount = targets.length - 1)
 
-    expect(onEnter).toHaveBeenCalledTimes(1)
-    expect(onExit).toHaveBeenCalledTimes(targets.length - 1)
-
-    // 2. Executes onOnter() and onExit() after a scroll event in root
+    // 2. It executes onOnter() and onExit() after an intersection
+    // Memo: the mock of IntersectionObserver triggers intersections on wheel
     act(() => {
-        observerOptions.root.dispatchEvent(new WheelEvent('wheel', { deltaY: 1 }))
+        root = container.querySelector('#root') || document
+        root.dispatchEvent(new WheelEvent('wheel', { bubbles: true, deltaY: 1 }))
         jest.runOnlyPendingTimers() /* (1) */
     })
 
-    expect(onEnter).toHaveBeenCalledTimes(1)
-    expect(onExit).toHaveBeenCalledTimes(1)
+    expect(config.onEnter).toHaveBeenCalledTimes(++onEnterCount)
+    expect(config.onExit).toHaveBeenCalledTimes(++onExitCount)
 
-    // 3. Executes observer.observe() and onExit() after mounting an additional target
+    // 3. It executes observer.observe() -> onExit() when mounting a new target
     act(() => {
+
+        config.root = root === document ? null : (root || null)
+        observer = observers.get(config)
+        jest.spyOn(observer, 'observe')
+
         targets = targets.concat('target-5')
-        render(
-            <Test
-                targets={targets}
-                onEnter={onEnter}
-                onExit={onExit}
-                threshold={observerOptions.threshold} />,
-            container)
+        render(<Test config={config} targets={targets} />, container)
     })
 
     expect(observer.observe).toHaveBeenCalledTimes(1)
-    expect(onExit).toHaveBeenCalledTimes(1)
+    expect(config.onExit).toHaveBeenCalledTimes(++onExitCount)
 
-    // 4. Executes observer.disconnect() then onOnter() or onExit() after an update of a hook option
+    // 4. It executes observer.disconnect() if root !== document
+    //             or observer.unobserve() if root === document
+    //             -> onOnter() or onExit()
+    //    after an update of a hook option
     act(() => {
-        render(
-            <Test
-                targets={targets}
-                onEnter={onEnter}
-                onExit={onExit}
-                threshold={observerOptions.threshold = 1} />,
-            container)
+
+        jest.spyOn(observer, 'disconnect')
+        jest.spyOn(observer, 'unobserve')
+
+        config.threshold = 1
+        render(<Test config={config} targets={targets} />, container)
     })
 
-    updatedObserver = observers.get(observerOptions)
-    jest.spyOn(updatedObserver, 'disconnect')
-    jest.spyOn(updatedObserver, 'unobserve')
-
-    if (observerOptions.root !== document) {
+    if (root === document) {
+        expect(observer.unobserve).toHaveBeenCalledTimes(targets.length)
+        expect(observer.disconnect).toHaveBeenCalledTimes(0)
+    } else {
+        expect(observer.unobserve).toHaveBeenCalledTimes(0)
         expect(observer.disconnect).toHaveBeenCalledTimes(1)
+        expect(observers.get({ ...config, threshold: 0 })).toBeUndefined()
     }
-    expect(onEnter).toHaveBeenCalledTimes(1)
-    expect(onExit).toHaveBeenCalledTimes(targets.length - 1)
+    expect(config.onEnter).toHaveBeenCalledTimes(++onEnterCount)
+    expect(config.onExit).toHaveBeenCalledTimes(onExitCount += targets.length - 1)
 
-    // 5. Unobserves an unmounting target
+    // 5. It executes observer.unobserve() before a target unmounts
     act(() => {
+
         targets = targets.slice(0, targets.length - 1)
-        render(
-            <Test
-                targets={targets}
-                onEnter={onEnter}
-                onExit={onExit}
-                threshold={observerOptions.threshold} />,
-            container)
+        observer = observers.get(config)
+        jest.spyOn(observer, 'unobserve')
+
+        render(<Test config={config} targets={targets} />, container)
     })
 
-    expect(updatedObserver.unobserve).toHaveBeenCalledTimes(1)
+    expect(observer.unobserve).toHaveBeenCalledTimes(1)
 
-    // 6. Disconnects an observer when root is unmounting
+    // 6. It executes observer.disconnect() before root unmounts if root !== document
     act(() => {
+        jest.spyOn(observer, 'disconnect')
         render(null, container)
     })
 
-    if (observerOptions.root === document) {
-        expect(observers.get(observerOptions)).toBeInstanceOf(IntersectionObserver)
+    if (root === document) {
+        expect(observers.get(config)).toBeInstanceOf(IntersectionObserver)
     } else {
-        expect(updatedObserver.disconnect).toHaveBeenCalledTimes(1)
-        expect(observers.get(observerOptions)).toBeUndefined()
+        expect(observer.disconnect).toHaveBeenCalledTimes(1)
+        expect(observers.get(config)).toBeUndefined()
     }
 })
