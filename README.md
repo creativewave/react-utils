@@ -160,7 +160,7 @@ Both should be used. To set `document` as `root`, the corresponding callback ref
 
 **Example:**
 - [CodePen](https://codepen.io/creative-wave/pen/jOOKMwo)
-- [CodePen, both scroll directions](https://codepen.io/creative-wave/pen/jOOKMwo)
+- [CodePen, both scroll directions](https://codepen.io/creative-wave/pen/WNbNRmx)
 
 **Configuration:**
 
