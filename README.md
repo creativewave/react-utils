@@ -158,12 +158,15 @@ Both should be used. To set `document` as `root`, the corresponding callback ref
 
 `Ref` is a React object ref containing the current `IntersectionObserver`.
 
-**Example:** [CodePen](https://codepen.io/creative-wave/pen/jOOKMwo)
+**Example:**
+- [CodePen](https://codepen.io/creative-wave/pen/jOOKMwo)
+- [CodePen, both scroll directions](https://codepen.io/creative-wave/pen/jOOKMwo)
 
 **Configuration:**
 
-- `beforeScroll` is an optional callback executed before scrolling, that can be used to set the `Element` to scroll into view (by returning its index value in `targets`) or eg. to set a CSS transition classname before scrolling, and receiving as arguments (1) the index of the target that will be scrolled into view, (2) the current target index and (3) the scrolling direction  (`up` or `down`)
+- `beforeScroll` is an optional callback executed before scrolling, that can be used to set the `Element` to scroll into view (by returning its index value in `targets`) or eg. to set a CSS transition classname before scrolling, and receiving as arguments (1) the index of the target that will be scrolled into view, (2) the current target index and (3) the scrolling direction  (`up`, `down`, `left`, or `right`)
 - `delay` (default to `200` ms) is a timeout value before scrolling
+- `directions` (default to `both`) is the scroll direction to listen on (`x`, `y`, or `both`)
 - `wait` (default to `1000` ms) is a timeout value between two authorized scroll events
 - `mode` (default to `auto`) is the [scrolling behavior](https://drafts.csswg.org/cssom-view/#smooth-scrolling)
 - `onEnter` and `onExit` are optional callbacks defined in [`useIntersectionObserver`](#useIntersectionObserver)
