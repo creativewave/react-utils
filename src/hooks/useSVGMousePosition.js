@@ -49,14 +49,14 @@ const useSVGMousePosition = ({
     const initListener = React.useCallback(
         (root, target) => {
 
-            const updatePosition = ({ clientX, clientY }) => {
+            const updatePosition = event => {
 
                 const { height, width, x, y } = target.getBoundingClientRect()
                 const [,, viewBoxWidth, viewBoxHeight] = target.getAttribute('viewBox').split(' ')
 
                 setPosition({
-                    x: round(precision, (clientX - (isFixed ? x : x - root.scrollLeft)) / width * viewBoxWidth),
-                    y: round(precision, (clientY - (isFixed ? y : y - root.scrollTop)) / height * viewBoxHeight),
+                    x: round(precision, (event.clientX - (isFixed ? x : x - root.scrollLeft)) / width * viewBoxWidth),
+                    y: round(precision, (event.clientY - (isFixed ? y : y - root.scrollTop)) / height * viewBoxHeight),
                 })
                 timerId.current = null
             }
