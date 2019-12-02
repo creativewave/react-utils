@@ -234,6 +234,8 @@ it.each(cases)('%s', (_, Test) => {
     expect(elements[currentTargetIndex].scrollIntoView).toHaveBeenCalledWith({ behavior: config.mode })
 
     // TODO: add tests when target index < 0 or index >= targets.length
+    // TODO: add tests with config.directions = 'x' and wheel events in y direction
+    // TODO: add tests with config.directions = 'y' and wheel events in x direction
     // TODO: add tests with config.directions = 'both' and wheel events in both directions
 
     // 6. It executes observer.unobserve() before a target unmounts
