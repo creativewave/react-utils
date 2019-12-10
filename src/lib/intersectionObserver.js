@@ -78,7 +78,8 @@ const Mock = class IntersectionObserver { // eslint-disable-line no-undef
             this.inView = entry
             return [
                 { isIntersecting: false, target: prevInView },
-                { intersectionRatio: 1, isIntersecting: true, target: entry }]
+                { intersectionRatio: 1, isIntersecting: true, target: entry },
+            ]
         }
 
         return []
