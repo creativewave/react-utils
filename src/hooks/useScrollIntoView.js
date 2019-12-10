@@ -124,7 +124,7 @@ const useScrollIntoView = ({
     beforeScroll = noop,
     debug,
     delay = 200,
-    directions = 'y',
+    directions = 'both',
     mode = 'smooth',
     onEnter = noop,
     onExit,
