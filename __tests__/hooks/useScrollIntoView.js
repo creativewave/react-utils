@@ -142,6 +142,7 @@ const events = ['pointerdown', 'pointerup', 'touchstart', 'touchmove', 'wheel']
 it.each(cases)('%s', (_, Test) => {
 
     const calls = {
+        beforeScroll: 0,
         onEnter: 0,
         onExit: 0,
     }
@@ -173,6 +174,10 @@ it.each(cases)('%s', (_, Test) => {
 
     expect(config.onEnter).toHaveBeenCalledTimes(++calls.onEnter)
     expect(config.onExit).toHaveBeenCalledTimes(calls.onExit = targets.ids.length - calls.onEnter)
+
+    // TODO: add test cases to fix when no target is intersecting on load
+    // 1. Load above first / below last target: targetIndex should be -1 / target.length
+    // 2. Load between two targets: targetIndex should be the one with the greatest intersection ratio
 
     /**
      * It executes beforeScroll() -> scrollIntoView() -> onExit() or onOnter()
@@ -253,24 +258,96 @@ it.each(cases)('%s', (_, Test) => {
             : events.length + 1)
 
     /**
-     * It executes scrollIntoView() on the target whose index is returned by
-     * beforeScroll() after a wheel event.
+     * After a wheel event (scroll down) in root:
+     * - it executes scrollIntoView() on the target whose index is returned by
+     * beforeScroll().
+     * - it doesn't execute onEnter() for targets between current and next, and
+     * it only execute onExit() for the current target.
      */
     act(() => {
-        root.dispatchEvent(new WheelEvent('wheel', { bubbles: true, deltaY: 1 }))
-        jest.advanceTimersByTime(config.wait) // (1)
+        if (root !== document) {
+            observer = observers.observers[0][0] // eslint-disable-line prefer-destructuring
+            observer.scrollTop = 1 // (4)
+        }
+        root.dispatchEvent(new WheelEvent('wheel', { bubbles: true, deltaY: 3 }))
         targets.currentIndex = targets.ids.length - 1
+        jest.advanceTimersByTime(config.wait) // (1)
     })
 
     expect(config.beforeScroll).toHaveBeenCalledTimes(++calls.beforeScroll)
     expect(config.beforeScroll).toHaveLastReturnedWith(targets.currentIndex)
     expect(targets.current.scrollIntoView).toHaveBeenCalledTimes(1)
     expect(config.onEnter).toHaveBeenCalledTimes(++calls.onEnter)
+    expect(config.onExit).toHaveBeenCalledTimes(++calls.onExit)
 
-    // TODO: add tests when target index < 0 or index >= targets.length
-    // TODO: add tests with config.directions = 'x' and wheel events in y direction
-    // TODO: add tests with config.directions = 'y' and wheel events in x direction
-    // TODO: add tests with config.directions = 'both' and wheel events in both directions
+    /**
+     * It executes only onExit() after a wheel event (scroll down) in root,
+     * below the last target.
+     */
+    act(() => {
+        root.dispatchEvent(new WheelEvent('wheel', { bubbles: true, deltaY: 1 }))
+        jest.advanceTimersByTime(config.wait) // (1)
+        targets.prevIndex = targets.currentIndex
+        targets.currentIndex = targets.ids.length
+    })
+
+    expect(config.beforeScroll).toHaveBeenNthCalledWith(
+        ++calls.beforeScroll,
+        targets.currentIndex,
+        targets.prevIndex,
+        'down')
+    expect(config.onExit).toHaveBeenCalledTimes(++calls.onExit)
+
+    /**
+     * It does nothing after a wheel event in root, further down below the last
+     * target.
+     */
+    act(() => {
+        root.dispatchEvent(new WheelEvent('wheel', { bubbles: true, deltaY: 1 }))
+        jest.advanceTimersByTime(config.wait) // (1)
+    })
+
+    expect(config.beforeScroll).toHaveBeenNthCalledWith(
+        ++calls.beforeScroll,
+        targets.currentIndex + 1,
+        targets.currentIndex, 'down')
+    expect(config.onExit).toHaveBeenCalledTimes(calls.onExit)
+
+    /**
+     * It executes scrollIntoView() -> only onEnter() on the target whose index
+     * is returned by beforeScroll(), after a wheel event (scroll up) from below
+     * the last target.
+     *
+     * TODO: fix this behavior (it should scroll the last target into view when
+     * its intersection ratio ~= 0.5)
+     */
+    act(() => {
+        root.dispatchEvent(new WheelEvent('wheel', { bubbles: true, deltaY: -1 }))
+        jest.advanceTimersByTime(config.wait) // (1)
+        targets.prevIndex = targets.currentIndex
+        targets.currentIndex = targets.ids.length - 1
+    })
+
+    expect(config.beforeScroll).toHaveBeenNthCalledWith(
+        ++calls.beforeScroll,
+        targets.currentIndex,
+        targets.prevIndex,
+        'up')
+    expect(targets.current.scrollIntoView).toHaveBeenCalledTimes(2)
+
+    /**
+     * It doesn't execute beforeScroll() after a wheel event towards a direction
+     * that is not watched according to config.directions, eg. scrolling left or
+     * right while directions === 'y'.
+     */
+    act(() => {
+        root.dispatchEvent(new WheelEvent('wheel', { bubbles: true, deltaX: 1 }))
+        jest.advanceTimersByTime(config.wait) // (1)
+        root.dispatchEvent(new WheelEvent('wheel', { bubbles: true, deltaX: 2, deltaY: 1 }))
+        jest.advanceTimersByTime(config.wait) // (1)
+    })
+
+    expect(config.beforeScroll).toHaveBeenCalledTimes(calls.beforeScroll)
 
     /**
      * It executes observer.unobserve() before a target unmounts.
