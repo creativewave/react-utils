@@ -190,6 +190,7 @@ it.each(cases)('%s', (_, Test) => {
     act(() => {
 
         root = container.querySelector('#root') || document
+        jest.spyOn(root === document ? root.body : root, 'scrollHeight', 'get').mockReturnValue(100)
         targets.elements = [...container.querySelectorAll('[id^=target]')]
         targets.elements.forEach(target => target.scrollIntoView = jest.fn()) // (2)
 
