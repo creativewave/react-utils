@@ -154,6 +154,7 @@ it.each(cases)('%s', (_, Test) => {
     // 1. It executes onOnter() or onExit() for each mounted target when mounting root
     act(() => {
         render(<Test config={config} targets={targets} />, container)
+        jest.runOnlyPendingTimers() // (1)
     })
 
     expect(config.onEnter).toHaveBeenCalledTimes(++onEnterCount)
