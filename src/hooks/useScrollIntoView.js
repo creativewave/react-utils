@@ -240,13 +240,15 @@ const useScrollIntoView = ({
                 }
 
                 const {
-                    clientHeight = root.current.body.clientHeight,
-                    clientWidth = root.current.body.clientWidth,
+                    clientHeight,
+                    clientWidth,
                     scrollLeft,
                     scrollHeight,
                     scrollTop,
                     scrollWidth,
-                } = root.current
+                } = root.current === document
+                    ? root.current.body
+                    : root.current
 
                 // (2)
                 if (directions === 'x' || (directions === 'both' && ['left', 'right'].includes(alias))) {
