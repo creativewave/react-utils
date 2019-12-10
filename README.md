@@ -148,11 +148,11 @@ It could be used eg. to delay the render of an error notice after validating an 
 
 `useScrollIntoView` abstracts using `Element.scrollIntoView()` when a `scroll` event is emitted.
 
-Depending on the scroll direction, it prevents the default scroll behavior and scrolls into view the next or previous `Element` of the given collection.
+Depending on the scroll direction, it prevents the default scroll behavior and scrolls into view the next or previous `Element`.
 
 `useScrollIntoView :: Configuration -> [CallbackRef, String|Number|Symbol -> CallbackRef, Ref]`
 
-The first [`CallbackRef`](https://reactjs.org/docs/refs-and-the-dom.html#callback-refs) should be used to define `root`, ie. an ancestor containing the `Element`s to scroll into view, defined with the second callback ref, obtained by executing the higher order function with a unique identifier for each `Element` to scroll into view.
+The first [`CallbackRef`](https://reactjs.org/docs/refs-and-the-dom.html#callback-refs) should be used to define `root`, ie. an ancestor containing the `Element`s to scroll into view, defined with the second callback ref, obtained by executing the higher order function with a unique identifier for each `Element`.
 
 Both should be used. To set `document` as `root`, the corresponding callback ref should be executed without an argument. See [`useIntersectionObserver`](#useIntersectionObserver) to know why, since this hook is used to set the previous/next `Element` to scroll into view when an `Element` enters in the viewport of `root`.
 
