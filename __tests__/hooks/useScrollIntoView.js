@@ -141,6 +141,10 @@ const events = ['pointerdown', 'pointerup', 'touchstart', 'touchmove', 'wheel']
 
 it.each(cases)('%s', (_, Test) => {
 
+    const calls = {
+        onEnter: 0,
+        onExit: 0,
+    }
     const config = {
         beforeScroll: jest.fn(() => {}),
         mode: 'smooth',
@@ -148,27 +152,27 @@ it.each(cases)('%s', (_, Test) => {
         onExit: jest.fn(),
         wait: 1000,
     }
+    const targets = {
+        get current() {
+            return targets.elements[targets.currentIndex]
+        },
+        elements: [],
+        ids: ['target-1', 'target-2', 'target-3', 'target-4'],
+    }
 
-    let currentTargetIndex
-    let elements
     let observer
-    let onEnterCalls = 0
-    let onExitCalls = 0
-    let nextTargetIndex
     let root
-    let scrollDirection
-    let targets = ['target-1', 'target-2', 'target-3', 'target-4']
 
     /**
      * It executes onOnter() or onExit() for each mounted target when mounting
      * root.
      */
     act(() => {
-        render(<Test config={config} targets={targets} />, container)
+        render(<Test config={config} targets={targets.ids} />, container)
     })
 
-    expect(config.onEnter).toHaveBeenCalledTimes(++onEnterCalls)
-    expect(config.onExit).toHaveBeenCalledTimes(onExitCalls = targets.length - 1)
+    expect(config.onEnter).toHaveBeenCalledTimes(++calls.onEnter)
+    expect(config.onExit).toHaveBeenCalledTimes(calls.onExit = targets.ids.length - calls.onEnter)
 
     /**
      * It executes beforeScroll() -> scrollIntoView() -> onExit() or onOnter()
@@ -181,18 +185,21 @@ it.each(cases)('%s', (_, Test) => {
     act(() => {
 
         root = container.querySelector('#root') || document
-        elements = container.querySelectorAll('[id^=target]')
-        elements.forEach(target => target.scrollIntoView = jest.fn()) // (2)
+        targets.elements = [...container.querySelectorAll('[id^=target]')]
+        targets.elements.forEach(target => target.scrollIntoView = jest.fn()) // (2)
 
         root.dispatchEvent(new WheelEvent('wheel', { bubbles: true, deltaY: 1 })) // (3)
         jest.advanceTimersByTime(config.wait) // (1)
-        currentTargetIndex = 1
+        targets.prevIndex = 0
+        targets.currentIndex = 1
     })
 
-    expect(config.beforeScroll).toHaveBeenNthCalledWith(1, 1, 0, 'down')
-    expect(elements[currentTargetIndex].scrollIntoView).toHaveBeenNthCalledWith(1, { behavior: config.mode })
-    expect(config.onEnter).toHaveBeenCalledTimes(++onEnterCalls)
-    expect(config.onExit).toHaveBeenCalledTimes(++onExitCalls)
+    expect(config.beforeScroll)
+        .toHaveBeenNthCalledWith(++calls.beforeScroll, targets.currentIndex, targets.prevIndex, 'down')
+    expect(targets.current.scrollIntoView)
+        .toHaveBeenNthCalledWith(1, { behavior: config.mode })
+    expect(config.onEnter).toHaveBeenCalledTimes(++calls.onEnter)
+    expect(config.onExit).toHaveBeenCalledTimes(++calls.onExit)
 
     /**
      * It executes observer.observe() -> onExit() when mounting a new target.
@@ -200,11 +207,11 @@ it.each(cases)('%s', (_, Test) => {
     act(() => {
         observer = observers.observers[0][0] // eslint-disable-line prefer-destructuring
         jest.spyOn(observer, 'observe')
-        render(<Test config={config} targets={targets = targets.concat('target-5')} />, container)
+        render(<Test config={config} targets={targets.ids = targets.ids.concat('target-5')} />, container)
     })
 
     expect(observer.observe).toHaveBeenCalledTimes(1)
-    expect(config.onExit).toHaveBeenCalledTimes(++onExitCalls)
+    expect(config.onExit).toHaveBeenCalledTimes(++calls.onExit)
 
     /**
      * It re-initializes event listeners after an update of a hook option.
@@ -218,21 +225,26 @@ it.each(cases)('%s', (_, Test) => {
      * step.
      * (5) The mock of IntersectionObserver adds a wheel event listener and
      * removes it only when it's disconnected, ie. if root !== document.
+     * (6) Calls after observe().
      */
     act(() => {
+
+        const lastTargetElement = container.querySelector('#target-5')
+        lastTargetElement.scrollIntoView = jest.fn()
+        targets.elements.push(lastTargetElement)
 
         jest.spyOn(root, 'addEventListener')
         jest.spyOn(root, 'removeEventListener')
 
-        config.beforeScroll = jest.fn((next, current, direction) => {
+        calls.beforeScroll = 0
+        config.beforeScroll = jest.fn(next => root === document ? next + 2 : next + 3) // (4)
+        config.directions = 'y'
 
-            currentTargetIndex = current
-            scrollDirection = direction
-            nextTargetIndex = next
+        render(<Test config={config} targets={targets.ids} />, container)
 
-            return current
-        })
-        render(<Test config={config} targets={targets} />, container)
+        /* (6) */
+        ++calls.onEnter
+        calls.onExit += targets.ids.length - 1
     })
 
     expect(root.removeEventListener).toHaveBeenCalledTimes(
@@ -247,13 +259,13 @@ it.each(cases)('%s', (_, Test) => {
     act(() => {
         root.dispatchEvent(new WheelEvent('wheel', { bubbles: true, deltaY: 1 }))
         jest.advanceTimersByTime(config.wait) // (1)
+        targets.currentIndex = targets.ids.length - 1
     })
 
-    expect(config.beforeScroll).toHaveBeenNthCalledWith(1, nextTargetIndex, currentTargetIndex, scrollDirection)
-    expect(config.beforeScroll).toHaveReturnedWith(currentTargetIndex)
-    expect(elements[currentTargetIndex].scrollIntoView).toHaveBeenNthCalledWith(
-        root === document ? 2 : 1,
-        { behavior: config.mode })
+    expect(config.beforeScroll).toHaveBeenCalledTimes(++calls.beforeScroll)
+    expect(config.beforeScroll).toHaveLastReturnedWith(targets.currentIndex)
+    expect(targets.current.scrollIntoView).toHaveBeenCalledTimes(1)
+    expect(config.onEnter).toHaveBeenCalledTimes(++calls.onEnter)
 
     // TODO: add tests when target index < 0 or index >= targets.length
     // TODO: add tests with config.directions = 'x' and wheel events in y direction
@@ -266,7 +278,7 @@ it.each(cases)('%s', (_, Test) => {
     act(() => {
         observer = observers.observers[0][0] // eslint-disable-line prefer-destructuring
         jest.spyOn(observer, 'unobserve')
-        render(<Test config={config} targets={targets = targets.slice(0, targets.length - 1)} />, container)
+        render(<Test config={config} targets={targets.ids = targets.ids.slice(0, targets.ids.length - 1)} />, container)
     })
 
     expect(observer.unobserve).toHaveBeenCalledTimes(1)
