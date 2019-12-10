@@ -18,7 +18,7 @@ const Mock = class IntersectionObserver { // eslint-disable-line no-undef
         this.callback = callback
         this.entries = []
         this.root = root
-        this.scrollPosition = 0
+        this.scrollTop = 0
 
         if (this.root === null) {
             this.root = document
@@ -28,11 +28,18 @@ const Mock = class IntersectionObserver { // eslint-disable-line no-undef
 
     _listen(event) {
 
-        const scrollPosition = this.scrollPosition + event.deltaY
-        if (scrollPosition < 0 || this.entries.length < scrollPosition) {
+        this.scrollTop += event.deltaY
+        if (this.scrollTop < 0 || this.entries.length < this.scrollTop - 1) {
+            return
+        } else if (this.entries.length === this.scrollTop) {
+            setTimeout(
+                () => this.callback([{
+                    isIntersecting: false,
+                    target: this.entries[this.entries.length - 1],
+                }], this),
+                0)
             return
         }
-        this.scrollPosition = scrollPosition
 
         let hasIntersection = false
         let entryIndex = 0
@@ -52,8 +59,8 @@ const Mock = class IntersectionObserver { // eslint-disable-line no-undef
 
     _getIntersectingEntries(entry, index, single = false) {
 
-        const entryTop = (1 * index) - this.scrollPosition
-        const entryBottom = (1 * index) + 1 - this.scrollPosition
+        const entryTop = (1 * index) - this.scrollTop
+        const entryBottom = (1 * index) + 1 - this.scrollTop
         const top = Math.max(entryTop, 0)
         const bottom = Math.min(entryBottom, 1)
 
