@@ -7,7 +7,7 @@
     "react",
     "react-hooks"
   ],
-  "version": "0.5.4",
+  "version": "0.6.0",
   "homepage": "https://github.com/creativewave/react-utils",
   "bugs": "https://github.com/creativewave/react-utils/issues",
   "repository": "github:creativewave/react-utils",
