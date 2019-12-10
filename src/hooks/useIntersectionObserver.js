@@ -53,7 +53,7 @@ class IntersectionObserversCache {
             (entries, observer) =>
                 entries.forEach(entry => {
                     log('[use-intersection-observer]', DEBUG, entry, observer)
-                    entry.isIntersecting
+                    entry.isIntersecting && (entry.intersectionRatio > 0 || 1 == observerOptions.threshold)
                         ? onEnter(entry, observer)
                         : onExit(entry, observer)
                 }),
