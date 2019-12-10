@@ -26,7 +26,9 @@ const getScrollDirection = (event, previousTouch = {}) => {
         }
         : { x: event.deltaX, y: event.deltaY }
 
-    if (event.type === 'touchmove' && (Math.abs(move.x) + Math.abs(move.y)) < 150) return 0
+    if (event.type === 'touchmove' && (Math.abs(move.x) + Math.abs(move.y)) < 150) {
+        return 0
+    }
 
     return Math.abs(move.x) > Math.abs(move.y)
         ? move.x > 0 ? [1, 'right'] : [-1, 'left']
@@ -117,8 +119,6 @@ const addEventListeners = (root, onScroll, isScrolling) => {
  * Memo: conceptualize the sequence of target indexes as a serie of numbers like
  * `|-1  0 1 2 3  4|`, where -1 and 4 represents a state without a target in
  * view, and 0 to 3 represent the state of the current target index in view.
- *
- * TODO: add demo using both directions, like a chessboard.
  */
 const useScrollIntoView = ({
     beforeScroll = noop,
@@ -127,7 +127,7 @@ const useScrollIntoView = ({
     directions = 'both',
     mode = 'smooth',
     onEnter = noop,
-    onExit,
+    onExit = noop,
     rootMargin,
     threshold = 1,
     wait = 1000,
@@ -135,6 +135,7 @@ const useScrollIntoView = ({
 
     const cleanup = React.useRef(noop)
     const isScrolling = React.useRef(false)
+    const next = React.useRef()
     const root = React.useRef()
     const target = React.useRef(-1)
     const targets = React.useRef([])
@@ -142,14 +143,34 @@ const useScrollIntoView = ({
     const setCurrentTarget = React.useCallback(index => target.current = index, [])
     const handleEnter = React.useCallback(
         entry => {
+            if (isScrolling.current
+                && targets.current[next.current]
+                && targets.current[next.current][1] !== entry.target) {
+                return
+            }
             setCurrentTarget(targets.current.findIndex(([, node]) => node === entry.target))
             onEnter(entry)
         },
-        [onEnter, setCurrentTarget, targets])
+        [isScrolling, next, onEnter, setCurrentTarget, targets])
+    const handleExit = React.useCallback(
+        entry => {
+            // (1) Prevent exit from first/last target when scrolling above/below them.
+            // (2) Prevent exit from targets between current and next targets
+            if (next.current < 0 || next.current >= targets.length) {
+                return
+            } else if (
+                isScrolling.current
+                && targets.current[target.current]
+                && targets.current[target.current][1] !== entry.target) {
+                return
+            }
+            onExit(entry)
+        },
+        [isScrolling, next, onExit, targets, target])
     const [setObserverRoot, setObserverTarget, observer] = useIntersectionObserver({
         debug,
         onEnter: handleEnter,
-        onExit,
+        onExit: handleExit,
         rootMargin,
         threshold,
     })
@@ -169,62 +190,75 @@ const useScrollIntoView = ({
                 return
             }
 
+            /**
+             * onScroll :: (React.Event -> Position) -> (void -> void)|void
+             *
+             * (1) It should abort if the user is scrolling to a direction that
+             * is not watched for.
+             *
+             * (2) It should abort if the user is scrolling up while the current
+             * target is the first target, or down while the current target is
+             * the last target, to avoid a "static" scroll, ie. from a position
+             * into the same position.
+             */
             const onScroll = (event, firstTouch) => {
 
                 const [direction, alias] = getScrollDirection(event, firstTouch)
 
-                if ((direction === 'x' && directions === 'y') || (direction === 'y' && directions === 'x')) {
+                // (1)
+                if ((directions === 'x' && ['down', 'up'].includes(alias))
+                    || (directions === 'y' && ['left', 'right'].includes(alias))) {
                     isScrolling.current = false
                     return
                 }
 
                 const nextIndex = target.current + direction
                 const userNextIndex = beforeScroll(nextIndex, target.current, alias)
-                const scrollTarget = (targets.current[userNextIndex] && targets.current[userNextIndex][1])
-                    || (targets.current[nextIndex] && targets.current[nextIndex][1])
+
+                next.current = targets.current[userNextIndex] ? userNextIndex : nextIndex
+
+                const nextTarget = targets.current[next.current] && targets.current[next.current][1]
 
                 log('[use-scroll-into-view]', debug, {
                     currentIndex: target.current,
-                    direction: `${alias} (${direction})`,
-                    nextIndex,
-                    target: scrollTarget,
+                    direction: `${alias} (${direction > 0 ? `+${direction}` : direction})`,
+                    next: next.current,
+                    target: nextTarget,
                     userNextIndex,
                     event, // eslint-disable-line sort-keys
                 })
 
-                if (!scrollTarget) {
+                if (nextTarget) {
 
-                    const {
-                        clientHeight,
-                        clientWidth,
-                        scrollLeft,
-                        scrollHeight,
-                        scrollTop,
-                        scrollWidth,
-                    } =
-                        root.current === document ? root.current.body : root.current
+                    const scrollTimerId = setTimeout(() => nextTarget.scrollIntoView({ behavior: mode }), delay)
+                    const throttleTimerId = setTimeout(() => isScrolling.current = false, wait)
 
-                    if (directions === 'x' || directions === 'both') {
-                        if (direction < 0 && scrollLeft === 0) return
-                        if (direction > 0 && scrollLeft + clientWidth === scrollWidth) return
-                    } else if (directions === 'y' || directions === 'both') {
-                        if (direction < 0 && scrollTop === 0) return
-                        if (direction > 0 && scrollTop + clientHeight === scrollHeight) return
+                    return () => {
+                        clearTimeout(scrollTimerId)
+                        clearTimeout(throttleTimerId)
                     }
-
-                    setCurrentTarget(direction > 0 ? targets.current.length : -1)
-                    isScrolling.current = false
-
-                    return
                 }
 
-                const scrollTimerId = setTimeout(() => scrollTarget.scrollIntoView({ behavior: mode }), delay)
-                const throttleTimerId = setTimeout(() => isScrolling.current = false, wait)
+                const {
+                    clientHeight = root.current.body.clientHeight,
+                    clientWidth = root.current.body.clientWidth,
+                    scrollLeft,
+                    scrollHeight,
+                    scrollTop,
+                    scrollWidth,
+                } = root.current
 
-                return () => {
-                    clearTimeout(scrollTimerId)
-                    clearTimeout(throttleTimerId)
+                // (2)
+                if (directions === 'x' || (directions === 'both' && ['left', 'right'].includes(alias))) {
+                    if (direction < 0 && scrollLeft === 0) return
+                    if (direction > 0 && scrollLeft + clientWidth === scrollWidth) return
+                } else if (directions === 'y' || (directions === 'both' && ['down', 'up'].includes(alias))) {
+                    if (direction < 0 && scrollTop === 0) return
+                    if (direction > 0 && scrollTop + clientHeight === scrollHeight) return
                 }
+
+                setCurrentTarget(direction > 0 ? targets.current.length : -1)
+                isScrolling.current = false
             }
             cleanup.current = addEventListeners(root.current = node || document, onScroll, isScrolling)
         },
@@ -235,6 +269,7 @@ const useScrollIntoView = ({
             directions,
             isScrolling,
             mode,
+            next,
             root,
             setCurrentTarget,
             setObserverRoot,
