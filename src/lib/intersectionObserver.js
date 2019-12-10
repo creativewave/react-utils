@@ -23,7 +23,8 @@ const Mock = class IntersectionObserver { // eslint-disable-line no-undef
         if (this.root === null) {
             this.root = document
         }
-        this.root.addEventListener('wheel', this._listen.bind(this))
+        this.listener = this._listen.bind(this)
+        this.root.addEventListener('wheel', this.listener)
     }
 
     _listen(event) {
@@ -92,7 +93,7 @@ const Mock = class IntersectionObserver { // eslint-disable-line no-undef
 
     disconnect() {
         this.entries = []
-        this.root.removeEventListener('wheel', this.onWheel)
+        this.root.removeEventListener('wheel', this.listener)
     }
 }
 
