@@ -170,6 +170,7 @@ it.each(cases)('%s', (_, Test) => {
      */
     act(() => {
         render(<Test config={config} targets={targets.ids} />, container)
+        jest.runOnlyPendingTimers() // (1)
     })
 
     expect(config.onEnter).toHaveBeenCalledTimes(++calls.onEnter)
