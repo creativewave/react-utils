@@ -151,7 +151,10 @@ it.each(cases)('%s', (_, Test) => {
         threshold: 0,
     }
 
-    // 1. It executes onOnter() or onExit() for each mounted target when mounting root
+    /**
+     * It executes onOnter() or onExit() for each mounted target when mounting
+     * root.
+     */
     act(() => {
         render(<Test config={config} targets={targets} />, container)
         jest.runOnlyPendingTimers() // (1)
@@ -160,18 +163,24 @@ it.each(cases)('%s', (_, Test) => {
     expect(config.onEnter).toHaveBeenCalledTimes(++onEnterCount)
     expect(config.onExit).toHaveBeenCalledTimes(onExitCount = targets.length - 1)
 
-    // 2. It executes onOnter() and onExit() after an intersection
-    // Memo: the mock of IntersectionObserver triggers intersections on wheel
+    /**
+     * It executes onExit() or onOnter() after an intersection.
+     *
+     * (2) The mock of IntersectionObserver should trigger an intersection on
+     * wheel.
+     */
     act(() => {
         root = container.querySelector('#root') || document
-        root.dispatchEvent(new WheelEvent('wheel', { bubbles: true, deltaY: 1 }))
-        jest.runOnlyPendingTimers() /* (1) */
+        root.dispatchEvent(new WheelEvent('wheel', { bubbles: true, deltaY: 1 })) // (2)
+        jest.runOnlyPendingTimers() // (1)
     })
 
     expect(config.onEnter).toHaveBeenCalledTimes(++onEnterCount)
     expect(config.onExit).toHaveBeenCalledTimes(++onExitCount)
 
-    // 3. It executes observer.observe() -> onExit() when mounting a new target
+    /**
+     * It executes observer.observe() -> onExit() when mounting a new target.
+     */
     act(() => {
 
         config.root = root === document ? null : (root || null)
@@ -185,10 +194,11 @@ it.each(cases)('%s', (_, Test) => {
     expect(observer.observe).toHaveBeenCalledTimes(1)
     expect(config.onExit).toHaveBeenCalledTimes(++onExitCount)
 
-    // 4. It executes observer.disconnect() if root !== document
-    //             or observer.unobserve() if root === document
-    //             -> onOnter() or onExit()
-    //    after an update of a hook option
+    /**
+     * It executes observer.disconnect() if root !== document or
+     * observer.unobserve() if root === document, then onOnter() or onExit(),
+     * after an update of a hook option.
+     */
     act(() => {
 
         jest.spyOn(observer, 'disconnect')
@@ -209,7 +219,9 @@ it.each(cases)('%s', (_, Test) => {
     expect(config.onEnter).toHaveBeenCalledTimes(++onEnterCount)
     expect(config.onExit).toHaveBeenCalledTimes(onExitCount += targets.length - 1)
 
-    // 5. It executes observer.unobserve() before a target unmounts
+    /**
+     * It executes observer.unobserve() before a target unmounts.
+     */
     act(() => {
 
         targets = targets.slice(0, targets.length - 1)
@@ -221,7 +233,10 @@ it.each(cases)('%s', (_, Test) => {
 
     expect(observer.unobserve).toHaveBeenCalledTimes(1)
 
-    // 6. It executes observer.disconnect() before root unmounts if root !== document
+    /**
+     * It executes observer.disconnect() if root !== document before root
+     * unmounts.
+     */
     act(() => {
         jest.spyOn(observer, 'disconnect')
         render(null, container)
