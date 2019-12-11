@@ -249,3 +249,66 @@ it.each(cases)('%s', (_, Test) => {
         expect(observers.get(config)).toBeUndefined()
     }
 })
+
+it('uses a single observer for a given set of IntersectionObserverOptions', () => {
+
+    const calls = {
+        componentA: { onEnter: 0, onExit: 0 },
+        componentB: { onEnter: 0, onExit: 0 },
+    }
+    const config = {
+        componentA: { onEnter: jest.fn(), onExit: jest.fn() },
+        componentB: { onEnter: jest.fn(), onExit: jest.fn() },
+    }
+    const targets = ['target-1', 'target-2']
+    const [, Test] = cases.find(([name]) => name === 'set root to undefined in useEffect()')
+
+    /**
+     * It executes onOnter() or onExit() for each target and for each hook users
+     * (components).
+     */
+    act(() => {
+        render(
+            (<>
+                <Test config={config.componentA} targets={targets.map(id => `ComponentA-${id}`)} />
+                <Test config={config.componentB} targets={targets.map(id => `ComponentB-${id}`)} />
+            </>),
+            container)
+        jest.runOnlyPendingTimers() // (1)
+    })
+
+    expect(observers.observers.length).toBe(1)
+    expect(config.componentA.onEnter).toHaveBeenCalledTimes(++calls.componentA.onEnter)
+    expect(config.componentA.onExit).toHaveBeenCalledTimes(++calls.componentA.onExit)
+    expect(config.componentB.onExit).toHaveBeenCalledTimes(calls.componentB.onExit += 2)
+
+    /**
+     * It executes onExit() or onOnter() after an intersection, for both hook
+     * users (components).
+     */
+    act(() => {
+        document.dispatchEvent(new WheelEvent('wheel', { bubbles: true, deltaY: 1 })) // (2)
+        jest.runOnlyPendingTimers() /* (1) */
+    })
+
+    expect(config.componentA.onEnter).toHaveBeenCalledTimes(++calls.componentA.onEnter)
+    expect(config.componentA.onExit).toHaveBeenCalledTimes(++calls.componentA.onExit)
+
+    /**
+     * It executes onExit() when mounting a new target, only for the hook user
+     * (component) that should observe it
+     */
+    act(() => {
+        render(
+            (<>
+                <Test config={config.componentA} targets={targets.concat('target-3').map(id => `ComponentA-${id}`)} />
+                <Test config={config.componentB} targets={targets.map(id => `ComponentB-${id}`)} />
+            </>),
+            container)
+    })
+
+    expect(config.componentA.onEnter).toHaveBeenCalledTimes(calls.componentA.onEnter)
+    expect(config.componentB.onEnter).toHaveBeenCalledTimes(calls.componentB.onEnter)
+    expect(config.componentA.onExit).toHaveBeenCalledTimes(++calls.componentA.onExit)
+    expect(config.componentB.onExit).toHaveBeenCalledTimes(calls.componentB.onExit)
+})
