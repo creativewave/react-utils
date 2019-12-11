@@ -7,6 +7,42 @@ import noop from '../lib/noop'
 
 let DEBUG
 
+class CustomIntersectionObserver extends IntersectionObserver {
+
+    constructor(...args) {
+        super(...args)
+        this.targets = new Map()
+    }
+
+    observe(target, { onEnter, onExit }) {
+
+        if (!this.targets.has(target)) {
+            this.targets.set(target, { onEnter: new Set(), onExit: new Set() })
+        }
+
+        const callbacks = this.targets.get(target)
+
+        if (typeof onEnter === 'function') {
+            callbacks.onEnter.add(onEnter)
+        }
+        if (typeof onExit === 'function') {
+            callbacks.onExit.add(onExit)
+        }
+
+        super.observe(target)
+    }
+
+    unobserve(target, { onEnter, onExit }) {
+
+        const callbacks = this.targets.get(target)
+
+        callbacks.onEnter.delete(onEnter)
+        callbacks.onExit.delete(onExit)
+
+        super.unobserve(target)
+    }
+}
+
 class IntersectionObserversCache {
 
     constructor() {
@@ -48,16 +84,19 @@ class IntersectionObserversCache {
      */
     set(options) {
 
-        const { onEnter, onExit, ...observerOptions } = options
-        const observer = new IntersectionObserver( // eslint-disable-line compat/compat
+        const observer = new CustomIntersectionObserver( // eslint-disable-line compat/compat
             (entries, observer) =>
                 entries.forEach(entry => {
+
                     log('[use-intersection-observer]', DEBUG, entry, observer)
-                    entry.isIntersecting && (entry.intersectionRatio > 0 || 1 == observerOptions.threshold)
-                        ? onEnter(entry, observer)
-                        : onExit(entry, observer)
+
+                    const callbacks = observer.targets.get(entry.target)
+
+                    entry.isIntersecting && (entry.intersectionRatio > 0 || 1 == options.threshold)
+                        ? callbacks.onEnter.forEach(onEnter => onEnter(entry, observer))
+                        : callbacks.onExit.forEach(onExit => onExit(entry, observer))
                 }),
-            observerOptions)
+            options)
 
         this.observers.push([observer, options])
 
@@ -106,13 +145,13 @@ const useIntersectionObserver = ({
     const setRoot = React.useCallback(
         node => {
 
-            const options = { onEnter, onExit, root: root.current, rootMargin, threshold }
+            const options = { root: root.current, rootMargin, threshold }
 
             if (node === null) {
                 // Don't remove an observer that has document (null) as root
                 // (it may be used by other components)
                 if (root.current === null) {
-                    targets.current.forEach(([target]) => observer.current.unobserve(target))
+                    targets.current.forEach(([target]) => observer.current.unobserve(target, { onEnter, onExit }))
                 } else {
                     observers.remove(observer.current)
                 }
@@ -126,7 +165,7 @@ const useIntersectionObserver = ({
             // Handle `setRoot()` (undefined -> null)
             options.root = root.current = node === document ? null : (node || null)
             observer.current = observers.get(options) || observers.set(options)
-            targets.current.forEach(([target]) => observer.current.observe(target))
+            targets.current.forEach(([target]) => observer.current.observe(target, { onEnter, onExit }))
         },
         [observer, onEnter, onExit, root, rootMargin, targets, threshold])
     const setTarget = React.useCallback(
@@ -136,17 +175,17 @@ const useIntersectionObserver = ({
                     if (nodeId !== id) {
                         return true
                     } else if (observer.current) {
-                        observer.current.unobserve(node)
+                        observer.current.unobserve(node, { onEnter, onExit })
                     }
                     return false
                 })
                 return
             } else if (observer.current) {
-                observer.current.observe(node)
+                observer.current.observe(node, { onEnter, onExit })
             }
             targets.current.push([node, id])
         }),
-        [observer, targets])
+        [observer, onEnter, onExit, targets])
 
     return [setRoot, setTarget, observer]
 }
