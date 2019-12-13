@@ -269,7 +269,8 @@ it.each(cases)('%s', (_, Test) => {
     act(() => {
         if (root !== document) {
             observer = observers.observers[0][0] // eslint-disable-line prefer-destructuring
-            observer.scrollTop = 1 // (4)
+            // scrollTop is assigned to ExtendedIntersectionObserver instead of
+            observer.observer.scrollTop = 1 // (4)
         }
         root.dispatchEvent(new WheelEvent('wheel', { bubbles: true, deltaY: 3 }))
         targets.currentIndex = targets.ids.length - 1
@@ -339,7 +340,7 @@ it.each(cases)('%s', (_, Test) => {
 
     /**
      * It doesn't execute beforeScroll() after a wheel event towards a direction
-     * that is not watched according to config.directions, eg. scrolling left or
+     * that isn't watched according to config.directions, eg. scrolling left or
      * right while directions === 'y'.
      */
     act(() => {
