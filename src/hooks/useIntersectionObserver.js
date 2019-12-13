@@ -7,6 +7,23 @@ import noop from '../lib/noop'
 
 let DEBUG
 
+/**
+ * ExtendedIntersectionObserver
+ *
+ * Targets => Map { [Element]: Callbacks }
+ * Callbacks => { onEnter: [Callback], onExit: [Callback] }
+ *
+ * It should set a map between an `Element` and its `Callbacks` when observing
+ * it, in order to use a single observer with multiple intersection callbacks,
+ * and assign this map to the `targets` property of the decorated observer.
+ *
+ * It should delete the given `Callback`(s) associated to an `Element` when
+ * unobserving it.
+ *
+ * Memo: Babel is not able to transpile an extension of `IntersectionObserver`
+ * for the UMD build (ES5), and it only has a few methods to handle, therefore
+ * a decorator is used in place of inheritance.
+ */
 export class ExtendedIntersectionObserver {
 
     constructor(callback, options) {
@@ -18,6 +35,9 @@ export class ExtendedIntersectionObserver {
         this.observer.disconnect()
     }
 
+    /**
+     * observe :: (Element -> { onEnter: Callback, onExit: Callback }) -> void
+     */
     observe(target, { onEnter, onExit }) {
 
         if (!this.observer.targets.has(target)) {
@@ -36,6 +56,9 @@ export class ExtendedIntersectionObserver {
         this.observer.observe(target)
     }
 
+    /**
+     * unobserve :: (Element -> { onEnter: Callback, onExit: Callback }) -> void
+     */
     unobserve(target, { onEnter, onExit }) {
 
         const callbacks = this.observer.targets.get(target)
@@ -47,6 +70,17 @@ export class ExtendedIntersectionObserver {
     }
 }
 
+/**
+ * IntersectionObserverCache
+ *
+ * It should set and get a single instance per `IntersectionObserverOptions`.
+ *
+ * It should disconnect an observer before removing it from the cache.
+ *
+ * It should provide a `clear()` interface to remove all observer instances, as
+ * a cleanup function after each test case, since an instance that is using the
+ * document as `root` will not be removed.
+ */
 class IntersectionObserversCache {
 
     constructor() {
@@ -55,9 +89,6 @@ class IntersectionObserversCache {
 
     /**
      * clear :: void -> void
-     *
-     * Memo: it resets observers property to its initial value, as a cleanup
-     * function to execute after each test case.
      */
     clear() {
         this.observers = []
@@ -119,12 +150,6 @@ export const observers = new IntersectionObserversCache()
  *   threshold?: Number,
  * }
  * CallbackRef :: Element?|null -> void
- *
- * It should use a single observer per unique set of intersectin's callbacks and
- * observer options given as arguments, by using them as a key to get instances
- * from `IntersectionObserverOptions`, ie. the cache handler.
- *
- * TODO: add unit tests for above expectation.
  */
 const useIntersectionObserver = ({
     debug = false,
