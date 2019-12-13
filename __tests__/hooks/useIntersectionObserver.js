@@ -282,8 +282,8 @@ it('uses a single observer for a given set of IntersectionObserverOptions', () =
     expect(config.componentB.onExit).toHaveBeenCalledTimes(calls.componentB.onExit += 2)
 
     /**
-     * It executes onExit() or onOnter() after an intersection, for both hook
-     * users (components).
+     * It executes onExit() or onOnter() after an intersection, only for the
+     * hook user that has children intersecting its root element.
      */
     act(() => {
         document.dispatchEvent(new WheelEvent('wheel', { bubbles: true, deltaY: 1 })) // (2)
@@ -292,10 +292,12 @@ it('uses a single observer for a given set of IntersectionObserverOptions', () =
 
     expect(config.componentA.onEnter).toHaveBeenCalledTimes(++calls.componentA.onEnter)
     expect(config.componentA.onExit).toHaveBeenCalledTimes(++calls.componentA.onExit)
+    expect(config.componentB.onEnter).toHaveBeenCalledTimes(calls.componentB.onEnter)
+    expect(config.componentB.onExit).toHaveBeenCalledTimes(calls.componentB.onExit)
 
     /**
      * It executes onExit() when mounting a new target, only for the hook user
-     * (component) that should observe it
+     * (component) that renders and observes it.
      */
     act(() => {
         render(
