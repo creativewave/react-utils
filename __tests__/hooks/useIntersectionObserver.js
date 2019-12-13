@@ -1,7 +1,6 @@
 
 import { render, unmountComponentAtNode } from 'react-dom'
-import useIntersectionObserver, { observers } from '../../src/hooks/useIntersectionObserver'
-import IntersectionObserver from '../../src/lib/intersectionObserver'
+import useIntersectionObserver, { ExtendedIntersectionObserver, observers } from '../../src/hooks/useIntersectionObserver'
 import React from 'react'
 import { act } from 'react-dom/test-utils'
 
@@ -243,7 +242,7 @@ it.each(cases)('%s', (_, Test) => {
     })
 
     if (root === document) {
-        expect(observers.get(config)).toBeInstanceOf(IntersectionObserver)
+        expect(observers.get(config)).toBeInstanceOf(ExtendedIntersectionObserver)
     } else {
         expect(observer.disconnect).toHaveBeenCalledTimes(1)
         expect(observers.get(config)).toBeUndefined()
