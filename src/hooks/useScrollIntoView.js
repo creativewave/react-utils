@@ -19,15 +19,15 @@ import useIntersectionObserver from './useIntersectionObserver'
  */
 const getScrollDirection = (event, previousTouch = {}) => {
 
-    const move = event.type === 'touchmove'
+    const move = event.type === 'pointermove'
         ? {
-            x: previousTouch.x - event.touches[0].clientX,
-            y: previousTouch.y - event.touches[0].clientY,
+            x: previousTouch.x - event.clientX,
+            y: previousTouch.y - event.clientY,
         }
         : { x: event.deltaX, y: event.deltaY }
 
-    if (event.type === 'touchmove' && (Math.abs(move.x) + Math.abs(move.y)) < 150) {
-        return 0
+    if (event.type === 'pointermove' && (Math.abs(move.x) + Math.abs(move.y)) < 150) {
+        return [0, 'static']
     }
 
     return Math.abs(move.x) > Math.abs(move.y)
@@ -42,10 +42,9 @@ const addEventListeners = (root, onScroll, isScrolling) => {
 
     let cancelTimers
     let firstTouch
-    let isPointerDown
 
     const onWheel = event => {
-        if (isPointerDown && event.type !== 'touchmove') {
+        if (!firstTouch && event.type === 'pointermove') {
             return
         } else if (!isScrolling.current) {
             cancelTimers = onScroll(event, firstTouch)
@@ -57,22 +56,24 @@ const addEventListeners = (root, onScroll, isScrolling) => {
         event.preventDefault()
         return event.returnValue = false
     }
-    const onPointerDown = () => isPointerDown = true
-    const onPointerUp = () => isPointerDown = false
-    const onTouchStart = event => firstTouch = { x: event.touches[0].clientX, y: event.touches[0].clientY }
+    const onPointerDown = event => {
+        if (event.pointerType === 'mouse' && event.button !== 1) {
+            return
+        }
+        firstTouch = { x: event.clientX, y: event.clientY }
+    }
+    const onPointerUp = () => firstTouch = null
 
     root.addEventListener('pointerdown', onPointerDown)
     root.addEventListener('pointerup', onPointerUp)
-    root.addEventListener('touchstart', onTouchStart)
-    root.addEventListener('touchmove', onWheel, { passive: false })
+    root.addEventListener('pointermove', onWheel, { passive: false })
     root.addEventListener('wheel', onWheel, { passive: false })
 
     return () => {
         cancelTimers && cancelTimers()
         root.removeEventListener('pointerdown', onPointerDown)
         root.removeEventListener('pointerup', onPointerUp)
-        root.removeEventListener('touchstart', onTouchStart)
-        root.removeEventListener('touchmove', onWheel, { passive: false })
+        root.removeEventListener('pointermove', onWheel, { passive: false })
         root.removeEventListener('wheel', onWheel, { passive: false })
     }
 }
@@ -94,10 +95,14 @@ const addEventListeners = (root, onScroll, isScrolling) => {
  * }
  * CallbackRef :: Element?|null -> void
  *
- * It should prevent scrolling an `Element` into view on `pointerdown`, ie. when
- * a mouse button is pressed (including `mousedown`), or when a physical contact
- * (finger or stylus) is made with the digitizer (including `touchstart` but not
- * `touchmove` or `pointermove`), until `pointerup`.
+ * It should scroll a previous/next `Element` into view (if any):
+ *   - on `wheel`
+ *   - on `pointermove` using either:
+ *     - the mouse if `pointerdown` its middle (wheel) button is down
+ *     - any other device (or the finger), while `pointerdown` was not fired
+ *       over the scrollbar
+ *
+ * TODO: try to find a lightweight way to fix the last specification.
  *
  * It should execute `beforeScroll` before scrolling, giving it a chance to set
  * the `Element` to scroll into view, otherwise it should scroll into view the
