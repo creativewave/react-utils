@@ -1,9 +1,39 @@
 
 import { render, unmountComponentAtNode } from 'react-dom'
+import PointerEvent from '../../__mocks__/PointerEvent'
 import React from 'react'
 import { act } from 'react-dom/test-utils'
 import { observers } from '../../src/hooks/useIntersectionObserver'
 import useScrollIntoView from '../../src/hooks/useScrollIntoView'
+
+/**
+ * createPointerEvent :: (String -> String -> Position) -> PointerEvent
+ *
+ * Position => { x: Number?, y: Number? }
+ */
+const createPointerEvent = (type, name, { x = 0, y = 0 } = {}) => {
+
+    const init = {
+        bubbles: true,
+        clientX: x,
+        clientY: y,
+        pointerType: name.startsWith('mouse')
+            ? 'mouse'
+            : 'touch',
+    }
+
+    switch (name) {
+        case 'fingerDown':
+        case 'mouseLeftBtnDown':
+            init.button = 0
+            break
+        case 'mouseWheelBtnDown':
+            init.button = 1
+            break
+    }
+
+    return new PointerEvent(type, init)
+}
 
 let container
 
@@ -137,7 +167,7 @@ const cases = [
         return <div>{targets.map(id => <div key={id} ref={setTarget(id)} id={id} />)}</div>
     }],
 ]
-const events = ['pointerdown', 'pointerup', 'touchstart', 'touchmove', 'wheel']
+const events = ['pointerdown', 'pointermove', 'pointerup', 'wheel']
 
 it.each(cases)('%s', (_, Test) => {
 
@@ -145,6 +175,10 @@ it.each(cases)('%s', (_, Test) => {
         beforeScroll: 0,
         onEnter: 0,
         onExit: 0,
+        preventDefault: {
+            pointerMove: 0,
+            wheel: 0,
+        },
     }
     const config = {
         beforeScroll: jest.fn(() => {}),
@@ -157,6 +191,7 @@ it.each(cases)('%s', (_, Test) => {
         get current() {
             return targets.elements[targets.currentIndex]
         },
+        currentIndex: 0,
         elements: [],
         ids: ['target-1', 'target-2', 'target-3', 'target-4'],
     }
@@ -181,7 +216,23 @@ it.each(cases)('%s', (_, Test) => {
     // 2. Load between two targets: targetIndex should be the one with the greatest intersection ratio
 
     /**
-     * It executes beforeScroll() -> scrollIntoView() -> onExit() or onOnter()
+     * It shouldn't execute beforeScroll() after a pointer move if it's a mouse
+     * and its left button is down.
+     */
+    act(() => {
+        root = container.querySelector('#root') || document
+        root.dispatchEvent(createPointerEvent('pointerdown', 'mouseLeftBtnDown'))
+        root.dispatchEvent(createPointerEvent('pointermove', 'mouseMoveUp', { y: -150 }))
+        root.dispatchEvent(createPointerEvent('pointerup', 'mouseBtnUp'))
+    })
+
+    expect(config.beforeScroll).toHaveBeenCalledTimes(calls.beforeScroll)
+
+    /**
+     * It executes beforeScroll()
+     *          -> scrollIntoView()
+     *          -> onExit() and onOnter()
+     *          -> WheelEvent.preventDefault()
      * after a wheel event (scroll down) in root.
      *
      * (2) jsdom doesn't implement Element.prototype.scrollIntoView().
@@ -190,15 +241,18 @@ it.each(cases)('%s', (_, Test) => {
      */
     act(() => {
 
-        root = container.querySelector('#root') || document
         jest.spyOn(root === document ? root.body : root, 'scrollHeight', 'get').mockReturnValue(100)
-        targets.elements = [...container.querySelectorAll('[id^=target]')]
-        targets.elements.forEach(target => target.scrollIntoView = jest.fn()) // (2)
+        jest.spyOn(WheelEvent.prototype, 'preventDefault')
+        container.querySelectorAll('[id^=target]').forEach(target => {
+            target.scrollIntoView = jest.fn() // (2)
+            targets.elements.push(target)
+        })
 
         root.dispatchEvent(new WheelEvent('wheel', { bubbles: true, deltaY: 1 })) // (3)
         jest.advanceTimersByTime(config.wait) // (1)
-        targets.prevIndex = 0
-        targets.currentIndex = 1
+
+        targets.prevIndex = targets.currentIndex
+        ++targets.currentIndex
     })
 
     expect(config.beforeScroll)
@@ -207,6 +261,52 @@ it.each(cases)('%s', (_, Test) => {
         .toHaveBeenNthCalledWith(1, { behavior: config.mode })
     expect(config.onEnter).toHaveBeenCalledTimes(++calls.onEnter)
     expect(config.onExit).toHaveBeenCalledTimes(++calls.onExit)
+    expect(WheelEvent.prototype.preventDefault).toHaveBeenCalledTimes(++calls.preventDefault.wheel)
+
+    /**
+     * It executes beforeScroll() -> ... -> PointerEvent.preventDefault() after
+     * a pointer move if it's a mouse with its middle (wheel) button down.
+     */
+    act(() => {
+
+        jest.spyOn(PointerEvent.prototype, 'preventDefault')
+
+        root.dispatchEvent(createPointerEvent('pointerdown', 'mouseWheelBtnDown'))
+        root.dispatchEvent(createPointerEvent('pointermove', 'mouseMoveUp', { y: -150 }))
+        root.dispatchEvent(createPointerEvent('pointerup', 'mouseBtnUp'))
+        jest.advanceTimersByTime(config.wait) // (1)
+
+        targets.prevIndex = targets.currentIndex
+        ++targets.currentIndex
+    })
+
+    expect(config.beforeScroll)
+        .toHaveBeenNthCalledWith(++calls.beforeScroll, targets.currentIndex, targets.prevIndex, 'down')
+    expect(targets.current.scrollIntoView)
+        .toHaveBeenNthCalledWith(1, { behavior: config.mode })
+    expect(PointerEvent.prototype.preventDefault)
+        .toHaveBeenCalledTimes(++calls.preventDefault.pointerMove)
+
+    /**
+     * It executes beforeScroll() -> ... -> PointerEvent.preventDefault() after
+     * a pointer move if it's not a mouse and it's not over the scrollbar.
+     *
+     * TODO: try to fix the last part of this specification.
+     */
+    act(() => {
+        root.dispatchEvent(createPointerEvent('pointerdown', 'fingerDown'))
+        root.dispatchEvent(createPointerEvent('pointermove', 'fingerMoveUp', { y: -150 }))
+        root.dispatchEvent(createPointerEvent('pointerup', 'fingerUp'))
+        jest.advanceTimersByTime(config.wait) // (1)
+    })
+
+    expect(config.beforeScroll).toHaveBeenNthCalledWith(
+        ++calls.beforeScroll,
+        targets.currentIndex,
+        targets.prevIndex,
+        'down')
+    expect(targets.current.scrollIntoView).toHaveBeenNthCalledWith(1, { behavior: config.mode })
+    expect(PointerEvent.prototype.preventDefault).toHaveBeenCalledTimes(++calls.preventDefault.pointerMove)
 
     /**
      * It executes observer.observe() -> onExit() when mounting a new target.
