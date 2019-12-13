@@ -7,20 +7,24 @@ import noop from '../lib/noop'
 
 let DEBUG
 
-class CustomIntersectionObserver extends IntersectionObserver {
+export class ExtendedIntersectionObserver {
 
-    constructor(...args) {
-        super(...args)
-        this.targets = new Map()
+    constructor(callback, options) {
+        this.observer = new IntersectionObserver(callback, options)
+        this.observer.targets = new Map()
+    }
+
+    disconnect() {
+        this.observer.disconnect()
     }
 
     observe(target, { onEnter, onExit }) {
 
-        if (!this.targets.has(target)) {
-            this.targets.set(target, { onEnter: new Set(), onExit: new Set() })
+        if (!this.observer.targets.has(target)) {
+            this.observer.targets.set(target, { onEnter: new Set(), onExit: new Set() })
         }
 
-        const callbacks = this.targets.get(target)
+        const callbacks = this.observer.targets.get(target)
 
         if (typeof onEnter === 'function') {
             callbacks.onEnter.add(onEnter)
@@ -29,17 +33,17 @@ class CustomIntersectionObserver extends IntersectionObserver {
             callbacks.onExit.add(onExit)
         }
 
-        super.observe(target)
+        this.observer.observe(target)
     }
 
     unobserve(target, { onEnter, onExit }) {
 
-        const callbacks = this.targets.get(target)
+        const callbacks = this.observer.targets.get(target)
 
         callbacks.onEnter.delete(onEnter)
         callbacks.onExit.delete(onExit)
 
-        super.unobserve(target)
+        this.observer.unobserve(target)
     }
 }
 
@@ -60,7 +64,7 @@ class IntersectionObserversCache {
     }
 
     /**
-     * get :: IntersectionObserverOptions -> IntersectionObserver|void
+     * get :: IntersectionObserverOptions -> ExtendedIntersectionObserver|void
      */
     get(options) {
 
@@ -73,18 +77,11 @@ class IntersectionObserversCache {
     }
 
     /**
-     * set :: {
-     *   onEnter: IntersectionObserverCallback,
-     *   onExit: IntersectionObserverCallback,
-     *   ...IntersectionObserverOptions,
-     * }
-     * -> IntersectionObserver
-     *
-     * IntersectionObserverCallback :: (IntersectionObserverEntry -> IntersectionObserver) -> void
+     * set :: IntersectionObserverOptions -> ExtendedIntersectionObserver
      */
     set(options) {
 
-        const observer = new CustomIntersectionObserver( // eslint-disable-line compat/compat
+        const observer = new ExtendedIntersectionObserver(
             (entries, observer) =>
                 entries.forEach(entry => {
 
@@ -104,7 +101,7 @@ class IntersectionObserversCache {
     }
 
     /**
-     * remove :: IntersectionObserver -> void
+     * remove :: ExtendedIntersectionObserver -> void
      */
     remove(observer) {
         this.observers = this.observers.filter(([o]) => o === observer ? observer.disconnect() : true)
