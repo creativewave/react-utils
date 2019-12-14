@@ -1,41 +1,43 @@
 
 import { render, unmountComponentAtNode } from 'react-dom'
+import useScrollIntoView, { TOUCH_BUTTON_ID, TOUCH_SENSITIVITY, WHEEL_BUTTON_ID } from '../../src/hooks/useScrollIntoView'
 import PointerEvent from '../../__mocks__/PointerEvent'
 import React from 'react'
 import { act } from 'react-dom/test-utils'
 import { observers } from '../../src/hooks/useIntersectionObserver'
-import useScrollIntoView from '../../src/hooks/useScrollIntoView'
+
+const touches = jest.spyOn(TouchEvent.prototype, 'touches', 'get')
 
 /**
- * createPointerEvent :: (String -> String -> Position) -> PointerEvent
- *
- * Position => { x: Number?, y: Number? }
+ * createEvent :: (EventType -> EventInit) -> PointerEvent|TouchEvent|WheelEvent
  */
-const createPointerEvent = (type, name, { x = 0, y = 0 } = {}) => {
+const createEvent = (type, { button, pointerType, x = 0, y = 0 } = {}) => {
 
-    const init = {
-        bubbles: true,
-        clientX: x,
-        clientY: y,
-        pointerType: name.startsWith('mouse')
-            ? 'mouse'
-            : 'touch',
+    const init = { bubbles: true }
+
+    switch (type) {
+        case 'pointerdown':
+            init.button = button // eslint-disable-line no-fallthrough
+        case 'pointerup':
+            init.pointerType = pointerType || init.button === TOUCH_BUTTON_ID ? 'touch' : 'mouse'
+            init.screenX = x * TOUCH_SENSITIVITY
+            init.screenY = y * TOUCH_SENSITIVITY
+            return new PointerEvent(type, init)
+        case 'touchmove':
+            touches.mockReturnValueOnce([{ screenX: x * TOUCH_SENSITIVITY, screenY: y * TOUCH_SENSITIVITY }])
+            return new TouchEvent(type, init) // eslint-disable-line compat/compat
+        case 'wheel':
+            init.deltaX = x
+            init.deltaY = y
+            return new WheelEvent(type, init)
     }
-
-    switch (name) {
-        case 'fingerDown':
-        case 'mouseLeftBtnDown':
-            init.button = 0
-            break
-        case 'mouseWheelBtnDown':
-            init.button = 1
-            break
-    }
-
-    return new PointerEvent(type, init)
 }
 
 let container
+
+jest.spyOn(PointerEvent.prototype, 'preventDefault')
+jest.spyOn(TouchEvent.prototype, 'preventDefault')
+jest.spyOn(WheelEvent.prototype, 'preventDefault')
 
 beforeEach(() => {
     container = document.createElement('div')
@@ -167,7 +169,7 @@ const cases = [
         return <div>{targets.map(id => <div key={id} ref={setTarget(id)} id={id} />)}</div>
     }],
 ]
-const events = ['pointerdown', 'pointermove', 'pointerup', 'wheel']
+const events = ['pointerdown', 'pointerup', 'touchmove', 'wheel']
 
 it.each(cases)('%s', (_, Test) => {
 
@@ -176,7 +178,8 @@ it.each(cases)('%s', (_, Test) => {
         onEnter: 0,
         onExit: 0,
         preventDefault: {
-            pointerMove: 0,
+            pointerDown: 0,
+            touchMove: 0,
             wheel: 0,
         },
     }
@@ -216,17 +219,16 @@ it.each(cases)('%s', (_, Test) => {
     // 2. Load between two targets: targetIndex should be the one with the greatest intersection ratio
 
     /**
-     * It shouldn't execute beforeScroll() after a pointer move if it's a mouse
-     * and its left button is down.
+     * It should execute PointerEvent.preventDefault() on `pointerdown` if it's
+     * a mouse with its middle (wheel) button pressed down.
      */
     act(() => {
         root = container.querySelector('#root') || document
-        root.dispatchEvent(createPointerEvent('pointerdown', 'mouseLeftBtnDown'))
-        root.dispatchEvent(createPointerEvent('pointermove', 'mouseMoveUp', { y: -150 }))
-        root.dispatchEvent(createPointerEvent('pointerup', 'mouseBtnUp'))
+        root.dispatchEvent(createEvent('pointerdown', { button: WHEEL_BUTTON_ID }))
+        root.dispatchEvent(createEvent('pointerup', { pointerType: 'mouse' }))
     })
 
-    expect(config.beforeScroll).toHaveBeenCalledTimes(calls.beforeScroll)
+    expect(PointerEvent.prototype.preventDefault).toHaveBeenCalledTimes(++calls.preventDefault.pointerDown)
 
     /**
      * It executes beforeScroll()
@@ -242,13 +244,12 @@ it.each(cases)('%s', (_, Test) => {
     act(() => {
 
         jest.spyOn(root === document ? root.body : root, 'scrollHeight', 'get').mockReturnValue(100)
-        jest.spyOn(WheelEvent.prototype, 'preventDefault')
         container.querySelectorAll('[id^=target]').forEach(target => {
             target.scrollIntoView = jest.fn() // (2)
             targets.elements.push(target)
         })
 
-        root.dispatchEvent(new WheelEvent('wheel', { bubbles: true, deltaY: 1 })) // (3)
+        root.dispatchEvent(createEvent('wheel', { y: 1 })) // (3)
         jest.advanceTimersByTime(config.wait) // (1)
 
         targets.prevIndex = targets.currentIndex
@@ -265,15 +266,15 @@ it.each(cases)('%s', (_, Test) => {
 
     /**
      * It executes beforeScroll() -> ... -> PointerEvent.preventDefault() after
-     * a pointer move if it's a mouse with its middle (wheel) button down.
+     * a touch move if it's not over the scrollbar.
+     *
+     * TODO: try to find a simple way to test and fix "not over the scrollbar".
      */
     act(() => {
 
-        jest.spyOn(PointerEvent.prototype, 'preventDefault')
-
-        root.dispatchEvent(createPointerEvent('pointerdown', 'mouseWheelBtnDown'))
-        root.dispatchEvent(createPointerEvent('pointermove', 'mouseMoveUp', { y: -150 }))
-        root.dispatchEvent(createPointerEvent('pointerup', 'mouseBtnUp'))
+        root.dispatchEvent(createEvent('pointerdown', { button: TOUCH_BUTTON_ID, y: 1 }))
+        root.dispatchEvent(createEvent('touchmove'))
+        root.dispatchEvent(createEvent('pointerup', { pointerType: 'touch' }))
         jest.advanceTimersByTime(config.wait) // (1)
 
         targets.prevIndex = targets.currentIndex
@@ -284,29 +285,8 @@ it.each(cases)('%s', (_, Test) => {
         .toHaveBeenNthCalledWith(++calls.beforeScroll, targets.currentIndex, targets.prevIndex, 'down')
     expect(targets.current.scrollIntoView)
         .toHaveBeenNthCalledWith(1, { behavior: config.mode })
-    expect(PointerEvent.prototype.preventDefault)
-        .toHaveBeenCalledTimes(++calls.preventDefault.pointerMove)
-
-    /**
-     * It executes beforeScroll() -> ... -> PointerEvent.preventDefault() after
-     * a pointer move if it's not a mouse and it's not over the scrollbar.
-     *
-     * TODO: try to fix the last part of this specification.
-     */
-    act(() => {
-        root.dispatchEvent(createPointerEvent('pointerdown', 'fingerDown'))
-        root.dispatchEvent(createPointerEvent('pointermove', 'fingerMoveUp', { y: -150 }))
-        root.dispatchEvent(createPointerEvent('pointerup', 'fingerUp'))
-        jest.advanceTimersByTime(config.wait) // (1)
-    })
-
-    expect(config.beforeScroll).toHaveBeenNthCalledWith(
-        ++calls.beforeScroll,
-        targets.currentIndex,
-        targets.prevIndex,
-        'down')
-    expect(targets.current.scrollIntoView).toHaveBeenNthCalledWith(1, { behavior: config.mode })
-    expect(PointerEvent.prototype.preventDefault).toHaveBeenCalledTimes(++calls.preventDefault.pointerMove)
+    expect(TouchEvent.prototype.preventDefault)
+        .toHaveBeenCalledTimes(++calls.preventDefault.touchMove)
 
     /**
      * It executes observer.observe() -> onExit() when mounting a new target.
@@ -372,7 +352,7 @@ it.each(cases)('%s', (_, Test) => {
             // scrollTop is assigned to ExtendedIntersectionObserver instead of
             observer.observer.scrollTop = 1 // (4)
         }
-        root.dispatchEvent(new WheelEvent('wheel', { bubbles: true, deltaY: 3 }))
+        root.dispatchEvent(createEvent('wheel', { y: 3 })) // (3)
         targets.currentIndex = targets.ids.length - 1
         jest.advanceTimersByTime(config.wait) // (1)
     })
@@ -388,7 +368,7 @@ it.each(cases)('%s', (_, Test) => {
      * below the last target.
      */
     act(() => {
-        root.dispatchEvent(new WheelEvent('wheel', { bubbles: true, deltaY: 1 }))
+        root.dispatchEvent(createEvent('wheel', { y: 1 })) // (3)
         jest.advanceTimersByTime(config.wait) // (1)
         targets.prevIndex = targets.currentIndex
         targets.currentIndex = targets.ids.length
@@ -406,7 +386,7 @@ it.each(cases)('%s', (_, Test) => {
      * target.
      */
     act(() => {
-        root.dispatchEvent(new WheelEvent('wheel', { bubbles: true, deltaY: 1 }))
+        root.dispatchEvent(createEvent('wheel', { y: 1 })) // (3)
         jest.advanceTimersByTime(config.wait) // (1)
     })
 
@@ -425,7 +405,7 @@ it.each(cases)('%s', (_, Test) => {
      * its intersection ratio ~= 0.5)
      */
     act(() => {
-        root.dispatchEvent(new WheelEvent('wheel', { bubbles: true, deltaY: -1 }))
+        root.dispatchEvent(createEvent('wheel', { y: -1 })) // (3)
         jest.advanceTimersByTime(config.wait) // (1)
         targets.prevIndex = targets.currentIndex
         targets.currentIndex = targets.ids.length - 1
@@ -444,9 +424,9 @@ it.each(cases)('%s', (_, Test) => {
      * right while directions === 'y'.
      */
     act(() => {
-        root.dispatchEvent(new WheelEvent('wheel', { bubbles: true, deltaX: 1 }))
+        root.dispatchEvent(createEvent('wheel', { x: 1 })) // (3)
         jest.advanceTimersByTime(config.wait) // (1)
-        root.dispatchEvent(new WheelEvent('wheel', { bubbles: true, deltaX: 2, deltaY: 1 }))
+        root.dispatchEvent(createEvent('wheel', { x: 2, y: 1 })) // (3)
         jest.advanceTimersByTime(config.wait) // (1)
     })
 
