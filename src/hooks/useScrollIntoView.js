@@ -7,9 +7,29 @@ import noop from '../lib/noop'
 import useIntersectionObserver from './useIntersectionObserver'
 
 /**
- * getScrollDirection :: (Event -> Position?) -> [Number, String]
+ * The distance in pixels that a finger or stylus should move to be handled as a
+ * scroll event.
  *
- * Position => { x: Number, y: Number }
+ * Memo: this seems to be impacted by the zoom level (5 pixels is a very small
+ * value).
+ */
+export const TOUCH_SENSITIVITY = 150
+/**
+ * The `MouseEvent` and `PointerEvent` (inherits `MouseEvent`) property id for
+ * the left button of a mouse, the finger, or a stylus.
+ */
+export const LEFT_BUTTON_ID = 0
+export const TOUCH_BUTTON_ID = LEFT_BUTTON_ID
+/**
+ * The `MouseEvent` property id for the middle (wheel) button of a mouse.
+ */
+export const WHEEL_BUTTON_ID = 1
+
+/**
+ * getScrollDirection :: (WheelEvent|TouchEvent -> Touch?) -> [Number, String]
+ *
+ * It should compute the scroll direction given either a single `WheelEvent` or
+ * a pair of `TouchEvent`s.
  *
  * It should return scroll direction as a `Number` (raw value) and as a `String`
  * (up, down, left, or right).
@@ -19,14 +39,23 @@ import useIntersectionObserver from './useIntersectionObserver'
  */
 const getScrollDirection = (event, previousTouch = {}) => {
 
-    const move = event.type === 'pointermove'
-        ? {
-            x: previousTouch.x - event.clientX,
-            y: previousTouch.y - event.clientY,
-        }
-        : { x: event.deltaX, y: event.deltaY }
+    const move = { x: 0, y: 0 }
 
-    if (event.type === 'pointermove' && (Math.abs(move.x) + Math.abs(move.y)) < 150) {
+    if (event.type === 'wheel') {
+
+        move.x = event.deltaX
+        move.y = event.deltaY
+
+    } else {
+
+        const [currentTouch] = event.touches
+
+        move.x = previousTouch.screenX - currentTouch.screenX
+        move.y = previousTouch.screenY - currentTouch.screenY
+    }
+
+    if (event.type === 'touchmove' && (Math.abs(move.x) + Math.abs(move.y)) < TOUCH_SENSITIVITY) {
+
         return [0, 'static']
     }
 
@@ -37,43 +66,65 @@ const getScrollDirection = (event, previousTouch = {}) => {
 
 /**
  * addEventListeners :: (Element -> (Event -> (void -> void)|void) -> { current: Boolean }) -> (void -> void)
+ *
+ * (1) It should prevent the default UA handler (scroll) on `touchmove`, since
+ * doing it on `pointermove` doesn't seem to work in Chrome Dev Tools, and it
+ * would be far less performant (active listener on each mouse move).
+ *
+ * (2) It should prevent the default UA handler (pointerdown, scroll) on
+ * `pointerdown` with a mouse that has its middle (wheel) button pressed down,
+ * for the same reason as described in (1).
+ *
+ * Memo: (2) also prevents the default "Open link in new tab" behavior.
+ *
+ * TODO: search for an "escape" to the side effect described above.
  */
 const addEventListeners = (root, onScroll, isScrolling) => {
 
     let cancelTimers
     let firstTouch
 
+    /**
+     * onWheel :: WheelEvent|TouchEvent -> false|void
+     */
     const onWheel = event => {
-        if (!firstTouch && event.type === 'pointermove') {
-            return
-        } else if (!isScrolling.current) {
+        if (!isScrolling.current) {
             cancelTimers = onScroll(event, firstTouch)
             if (!cancelTimers) {
+                // No target to scroll into view: return control to UA
                 return
             }
             isScrolling.current = true
         }
+        // Target found to scroll into view: prevent current and incoming events
+        // to be handled by UA
         event.preventDefault()
         return event.returnValue = false
     }
+    /**
+     * onPointerDown :: PointerEvent -> false|void
+     */
     const onPointerDown = event => {
-        if (event.pointerType === 'mouse' && event.button !== 1) {
+        if (event.button === WHEEL_BUTTON_ID) {
+            event.preventDefault()
+            return event.returnValue = false
+        } else if (event.pointerType === 'mouse') {
             return
         }
-        firstTouch = { x: event.clientX, y: event.clientY }
+        firstTouch = event
     }
     const onPointerUp = () => firstTouch = null
 
     root.addEventListener('pointerdown', onPointerDown)
     root.addEventListener('pointerup', onPointerUp)
-    root.addEventListener('pointermove', onWheel, { passive: false })
+    root.addEventListener('touchmove', onWheel, { passive: false }) // (1)
     root.addEventListener('wheel', onWheel, { passive: false })
 
     return () => {
         cancelTimers && cancelTimers()
         root.removeEventListener('pointerdown', onPointerDown)
         root.removeEventListener('pointerup', onPointerUp)
-        root.removeEventListener('pointermove', onWheel, { passive: false })
+        root.removeEventListener('touchmove', onWheel, { passive: false })
         root.removeEventListener('wheel', onWheel, { passive: false })
     }
 }
@@ -95,14 +146,13 @@ const addEventListeners = (root, onScroll, isScrolling) => {
  * }
  * CallbackRef :: Element?|null -> void
  *
- * It should scroll a previous/next `Element` into view (if any):
- *   - on `wheel`
- *   - on `pointermove` using either:
- *     - the mouse if `pointerdown` its middle (wheel) button is down
- *     - any other device (or the finger), while `pointerdown` was not fired
- *       over the scrollbar
+ * It should scroll a previous/next `Element` into view (if any) on `wheel` or
+ * on `touchmove` if `pointerdown` was not fired over the scrollbar.
  *
- * TODO: try to find a lightweight way to fix the last specification.
+ * TODO: try to find a simple way to fix "not over the scrollbar".
+ *
+ * It should prevent default UA handler (scroll) on `mousedown` if the middle
+ * button of the mouse is down.
  *
  * It should execute `beforeScroll` before scrolling, giving it a chance to set
  * the `Element` to scroll into view, otherwise it should scroll into view the
@@ -196,12 +246,15 @@ const useScrollIntoView = ({
             }
 
             /**
-             * onScroll :: (React.Event -> Position) -> (void -> void)|void
+             * onScroll :: (Event -> Position) -> (void -> void)|void
              *
-             * (1) It should abort if the user is scrolling to a direction that
+             * (1) It should prevent default UA behavior until a touch move has
+             * reached a minimal distance to handle it as a scroll event.
+             *
+             * (2) It should abort if the user is scrolling to a direction that
              * is not watched for.
              *
-             * (2) It should abort if the user is scrolling up while the current
+             * (3) It should abort if the user is scrolling up while the current
              * target is the first target, or down while the current target is
              * the last target, to avoid a "static" scroll, ie. from a position
              * into the same position.
@@ -211,6 +264,13 @@ const useScrollIntoView = ({
                 const [direction, alias] = getScrollDirection(event, firstTouch)
 
                 // (1)
+                if (direction === 0) {
+                    event.preventDefault()
+                    event.returnValue = false
+                    return
+                }
+
+                // (2)
                 if ((directions === 'x' && ['down', 'up'].includes(alias))
                     || (directions === 'y' && ['left', 'right'].includes(alias))) {
                     isScrolling.current = false
@@ -255,7 +315,7 @@ const useScrollIntoView = ({
                     ? root.current.body
                     : root.current
 
-                // (2)
+                // (3)
                 if (directions === 'x' || (directions === 'both' && ['left', 'right'].includes(alias))) {
                     if (direction < 0 && scrollLeft === 0) return
                     if (direction > 0 && scrollLeft + clientWidth === scrollWidth) return
