@@ -148,7 +148,11 @@ It could be used eg. to delay the render of an error notice after validating an 
 
 `useScrollIntoView` abstracts using `Element.scrollIntoView()` when a `scroll` event is emitted.
 
-Depending on the scroll direction, it prevents the default scroll behavior and scrolls into view the next or previous `Element`.
+Depending on the scroll direction, it prevents the default scroll behavior and scrolls into view the next or previous `Element`, on:
+
+- ✅ touch (finger or stylus) move
+- ✅ wheel (rolling)
+- ❌ wheel (button)
 
 `useScrollIntoView :: Configuration -> [CallbackRef, String|Number|Symbol -> CallbackRef, Ref]`
 
