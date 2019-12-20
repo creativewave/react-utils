@@ -189,6 +189,7 @@ const useScrollIntoView = ({
     const isScrolling = React.useRef(false)
     const next = React.useRef()
     const root = React.useRef()
+    const prev = React.useRef()
     const target = React.useRef(-1)
     const targets = React.useRef([])
 
@@ -212,13 +213,13 @@ const useScrollIntoView = ({
                 return
             } else if (
                 isScrolling.current
-                && targets.current[target.current]
-                && targets.current[target.current][1] !== entry.target) {
+                && targets.current[prev.current]
+                && targets.current[prev.current][1] !== entry.target) {
                 return
             }
             onExit(entry)
         },
-        [isScrolling, next, onExit, targets, target])
+        [isScrolling, onExit, prev, targets])
     const [setObserverRoot, setObserverTarget, observer] = useIntersectionObserver({
         debug,
         onEnter: handleEnter,
@@ -278,6 +279,7 @@ const useScrollIntoView = ({
                 const userNextIndex = beforeScroll(nextIndex, target.current, alias)
 
                 next.current = targets.current[userNextIndex] ? userNextIndex : nextIndex
+                prev.current = target.current
 
                 const nextTarget = targets.current[next.current] && targets.current[next.current][1]
 
@@ -294,6 +296,8 @@ const useScrollIntoView = ({
 
                     const scrollTimerId = setTimeout(() => nextTarget.scrollIntoView({ behavior: mode }), delay)
                     const throttleTimerId = setTimeout(() => isScrolling.current = false, wait)
+
+                    setCurrentTarget(next.current)
 
                     return () => {
                         clearTimeout(scrollTimerId)
@@ -334,6 +338,7 @@ const useScrollIntoView = ({
             isScrolling,
             mode,
             next,
+            prev,
             root,
             setCurrentTarget,
             setObserverRoot,
