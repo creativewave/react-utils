@@ -9,9 +9,6 @@ import useIntersectionObserver from './useIntersectionObserver'
 /**
  * The distance in pixels that a finger or stylus should move to be handled as a
  * scroll event.
- *
- * Memo: this seems to be impacted by the zoom level (5 pixels is a very small
- * value).
  */
 export const TOUCH_SENSITIVITY = 150
 /**
@@ -26,13 +23,13 @@ export const TOUCH_BUTTON_ID = LEFT_BUTTON_ID
 export const WHEEL_BUTTON_ID = 1
 
 /**
- * getScrollDirection :: (WheelEvent|TouchEvent -> Touch?) -> [Number, String]
+ * getScrollDirection :: (WheelEvent|PointerEvent -> Touch?) -> [Number, String]
  *
  * It should compute the scroll direction given either a single `WheelEvent` or
- * a pair of `TouchEvent`s.
+ * a pair of a `PointerEvent` and a `TouchEvent`.
  *
- * It should return scroll direction as a `Number` (raw value) and as a `String`
- * (up, down, left, or right).
+ * It should return scroll direction as a signed binary `Number` (-1, 0, +1) and
+ * as a `String` (up, down, left, or right).
  *
  * TODO (better handle wheel events):
  * https://github.com/Promo/wheel-indicator/blob/master/lib/wheel-indicator.js#L109
