@@ -238,8 +238,7 @@ it.each(cases)('%s', (_, Test) => {
      * after a wheel event (scroll down) in root.
      *
      * (2) jsdom doesn't implement Element.prototype.scrollIntoView().
-     * (3) The mock of IntersectionObserver should trigger an intersection on
-     * wheel.
+     * (3) The mock of IntersectionObserver triggers an intersection on wheel.
      */
     act(() => {
 
