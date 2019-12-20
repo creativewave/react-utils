@@ -71,15 +71,15 @@ export class ExtendedIntersectionObserver {
 }
 
 /**
- * IntersectionObserverCache
+ * IntersectionObserversCache
  *
  * It should set and get a single instance per `IntersectionObserverOptions`.
  *
- * It should disconnect an observer before removing it from the cache.
+ * It should disconnect an observer before removing it from its cache.
  *
- * It should provide a `clear()` interface to remove all observer instances, as
- * a cleanup function after each test case, since an instance that is using the
- * document as `root` will not be removed.
+ * It should provide a `clear()` interface to remove observer instances after
+ * each test case that uses document as root, whose observer will not be removed
+ * on unmount.
  */
 class IntersectionObserversCache {
 
