@@ -203,8 +203,8 @@ it.each(cases)('%s', (_, Test) => {
     let root
 
     /**
-     * It executes onOnter() or onExit() for each mounted target when mounting
-     * root.
+     * It executes only onOnter() for each mounted target in root's viewport,
+     * after mounting it.
      */
     act(() => {
         render(<Test config={config} targets={targets.ids} />, container)
@@ -212,7 +212,7 @@ it.each(cases)('%s', (_, Test) => {
     })
 
     expect(config.onEnter).toHaveBeenCalledTimes(++calls.onEnter)
-    expect(config.onExit).toHaveBeenCalledTimes(calls.onExit = targets.ids.length - calls.onEnter)
+    expect(config.onExit).toHaveBeenCalledTimes(calls.onExit)
 
     // TODO: add test cases to fix when no target is intersecting on load
     // 1. Load above first / below last target: targetIndex should be -1 / target.length
@@ -363,8 +363,8 @@ it.each(cases)('%s', (_, Test) => {
     expect(config.onExit).toHaveBeenCalledTimes(++calls.onExit)
 
     /**
-     * It executes only onExit() after a wheel event (scroll down) in root,
-     * below the last target.
+     * It should not execute onExit() after a wheel event (scroll down) in root,
+     * above the first target, or below the last target.
      */
     act(() => {
         root.dispatchEvent(createEvent('wheel', { y: 1 })) // (3)
@@ -378,7 +378,7 @@ it.each(cases)('%s', (_, Test) => {
         targets.currentIndex,
         targets.prevIndex,
         'down')
-    expect(config.onExit).toHaveBeenCalledTimes(++calls.onExit)
+    expect(config.onExit).toHaveBeenCalledTimes(calls.onExit)
 
     /**
      * It does nothing after a wheel event in root, further down below the last
