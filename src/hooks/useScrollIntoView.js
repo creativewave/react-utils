@@ -313,7 +313,7 @@ const useScrollIntoView = ({
                     scrollTop,
                     scrollWidth,
                 } = root.current === document
-                    ? root.current.body
+                    ? root.current.documentElement
                     : root.current
 
                 // (3)
