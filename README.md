@@ -67,9 +67,9 @@ Related:
 
 `useIntersectionObserver` abstracts using an `IntersectionObserver` to execute a function when an `Element` intersects an ancestor, ie. when it enters in or exits from its viewport.
 
-`useIntersectionObserver :: Configuration -> [CallbackRef, String|Number|Symbol -> CallbackRef, Ref]`
+`useIntersectionObserver :: Configuration -> [CallbackRef, Identifier -> CallbackRef, Ref]`
 
-The first [`CallbackRef`](https://reactjs.org/docs/refs-and-the-dom.html#callback-refs) should be used to define `root`, ie. an ancestor containing the `Element`s to observe, defined with the second callback ref obtained by executing the higher order function with an identifier for each `Element` to observe.
+The first [`CallbackRef`](https://reactjs.org/docs/refs-and-the-dom.html#callback-refs) should be used to define `root`, ie. an ancestor containing the `Element`s to observe, defined with the second callback ref obtained by executing the higher order function with an `Identifier` (`String|Number|Symbol`) for each `Element` to observe.
 
 Both should be used. `root` will default to `null` (ie. [`document`](https://w3c.github.io/IntersectionObserver/#intersectionobserver-intersection-root)) when the corresponding callback ref is executed without an argument. `null` can't be used to set `root` to `document` because React will execute the callback ref with `null` before unmount, if it's used as a ref prop.
 
@@ -154,9 +154,9 @@ Depending on the scroll direction, it prevents the default scroll behavior and s
 - ✅ wheel (rolling)
 - ❌ wheel (button)
 
-`useScrollIntoView :: Configuration -> [CallbackRef, String|Number|Symbol -> CallbackRef, Ref]`
+`useScrollIntoView :: Configuration -> [CallbackRef, Identifier -> CallbackRef, Ref]`
 
-The first [`CallbackRef`](https://reactjs.org/docs/refs-and-the-dom.html#callback-refs) should be used to define `root`, ie. an ancestor containing the `Element`s to scroll into view, defined with the second callback ref, obtained by executing the higher order function with a unique identifier for each `Element`.
+The first [`CallbackRef`](https://reactjs.org/docs/refs-and-the-dom.html#callback-refs) should be used to define `root`, ie. an ancestor containing the `Element`s to scroll into view, defined with the second callback ref, obtained by executing the higher order function with a unique `Identifier` (`String|Number|Symbol`) for each `Element`.
 
 Both should be used. To set `document` as `root`, the corresponding callback ref should be executed without an argument. See [`useIntersectionObserver`](#useIntersectionObserver) to know why, since this hook is used to set the previous/next `Element` to scroll into view when an `Element` enters in the viewport of `root`.
 
