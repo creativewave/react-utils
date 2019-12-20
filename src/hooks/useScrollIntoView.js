@@ -62,7 +62,9 @@ const getScrollDirection = (event, previousTouch = {}, touchSensitivity) => {
 }
 
 /**
- * addEventListeners :: (Element -> (Event -> (void -> void)|void) -> { current: Boolean }) -> (void -> void)
+ * addEventListeners :: (Element -> (Event -> (void -> void)|void) -> State) -> (void -> void)
+ *
+ * State => { isScrolling: Boolean }
  *
  * (1) It should prevent the default UA handler (scroll) on `touchmove`, since
  * doing it on `pointermove` doesn't seem to work in Chrome Dev Tools, and it
@@ -76,7 +78,7 @@ const getScrollDirection = (event, previousTouch = {}, touchSensitivity) => {
  *
  * TODO: search for an "escape" to the side effect described above.
  */
-const addEventListeners = (root, onScroll, isScrolling) => {
+const addEventListeners = (root, onScroll, state) => {
 
     let cancelTimers
     let firstTouch
@@ -85,13 +87,13 @@ const addEventListeners = (root, onScroll, isScrolling) => {
      * onWheel :: WheelEvent|TouchEvent -> false|void
      */
     const onWheel = event => {
-        if (!isScrolling.current) {
+        if (!state.isScrolling) {
             cancelTimers = onScroll(event, firstTouch)
             if (!cancelTimers) {
                 // No target to scroll into view: return control to UA
                 return
             }
-            isScrolling.current = true
+            state.isScrolling = true
         }
         // Target found to scroll into view: prevent current and incoming events
         // to be handled by UA
@@ -124,6 +126,14 @@ const addEventListeners = (root, onScroll, isScrolling) => {
         root.removeEventListener('touchmove', onWheel, { passive: false })
         root.removeEventListener('wheel', onWheel, { passive: false })
     }
+}
+
+const initialState = {
+    active: -1,
+    cleanup: noop,
+    isScrolling: false,
+    next: null,
+    prev: null,
 }
 
 /**
@@ -187,41 +197,37 @@ const useScrollIntoView = ({
     wait = 1000,
 } = {}) => {
 
-    const cleanup = React.useRef(noop)
-    const isScrolling = React.useRef(false)
-    const next = React.useRef()
+    const state = React.useRef(initialState)
     const root = React.useRef()
-    const prev = React.useRef()
-    const target = React.useRef(-1)
     const targets = React.useRef([])
 
-    const setCurrentTarget = React.useCallback(index => target.current = index, [])
+    const setActiveTarget = React.useCallback(index => state.current.active = index, [])
     const handleEnter = React.useCallback(
         entry => {
-            if (isScrolling.current
-                && targets.current[next.current]
-                && targets.current[next.current][1] !== entry.target) {
+            if (state.current.isScrolling
+                && targets.current[state.current.next]
+                && targets.current[state.current.next][1] !== entry.target) {
                 return
             }
-            setCurrentTarget(targets.current.findIndex(([, node]) => node === entry.target))
+            setActiveTarget(targets.current.findIndex(([, node]) => node === entry.target))
             onEnter(entry)
         },
-        [isScrolling, next, onEnter, setCurrentTarget, targets])
+        [onEnter, setActiveTarget, state, targets])
     const handleExit = React.useCallback(
         entry => {
-            // (1) Prevent exit from first/last target when scrolling above/below them.
-            // (2) Prevent exit from targets between current and next targets
-            if (next.current < 0 || next.current >= targets.length) {
-                return
-            } else if (
-                isScrolling.current
-                && targets.current[prev.current]
-                && targets.current[prev.current][1] !== entry.target) {
+            if (// Prevent exit on load
+                state.current.next === null
+                // Prevent exit from targets between current and next targets
+                || (state.current.next < 0 || state.current.next >= targets.current.length)
+                // Prevent exit from first/last target when scrolling above/below them.
+                || (state.current.isScrolling
+                    && targets.current[state.current.prev]
+                    && targets.current[state.current.prev][1] !== entry.target)) {
                 return
             }
             onExit(entry)
         },
-        [isScrolling, onExit, prev, targets])
+        [onExit, state, targets])
     const [setObserverRoot, setObserverTarget, observer] = useIntersectionObserver({
         debug,
         onEnter: handleEnter,
@@ -236,8 +242,8 @@ const useScrollIntoView = ({
             setObserverRoot(node)
 
             if (node === null) {
-                cleanup.current()
-                cleanup.current = noop
+                state.current.cleanup()
+                state.current.cleanup = noop
                 root.current = undefined
                 return
             } else if ((root.current === node && typeof node !== 'undefined')
@@ -273,22 +279,22 @@ const useScrollIntoView = ({
                 // (2)
                 if ((directions === 'x' && ['down', 'up'].includes(alias))
                     || (directions === 'y' && ['left', 'right'].includes(alias))) {
-                    isScrolling.current = false
+                    state.current.isScrolling = false
                     return
                 }
 
-                const nextIndex = target.current + direction
-                const userNextIndex = beforeScroll(nextIndex, target.current, alias)
+                const nextIndex = state.current.active + direction
+                const userNextIndex = beforeScroll(nextIndex, state.current.active, alias)
 
-                next.current = targets.current[userNextIndex] ? userNextIndex : nextIndex
-                prev.current = target.current
+                state.current.next = targets.current[userNextIndex] ? userNextIndex : nextIndex
+                state.current.prev = state.current.active
 
-                const nextTarget = targets.current[next.current] && targets.current[next.current][1]
+                const nextTarget = targets.current[state.current.next] && targets.current[state.current.next][1]
 
                 log('[use-scroll-into-view]', debug, {
-                    currentIndex: target.current,
+                    currentIndex: state.current.active,
                     direction: `${alias} (${direction > 0 ? `+${direction}` : direction})`,
-                    next: next.current,
+                    next: state.current.next,
                     target: nextTarget,
                     userNextIndex,
                     event, // eslint-disable-line sort-keys
@@ -297,9 +303,9 @@ const useScrollIntoView = ({
                 if (nextTarget) {
 
                     const scrollTimerId = setTimeout(() => nextTarget.scrollIntoView({ behavior: mode }), delay)
-                    const throttleTimerId = setTimeout(() => isScrolling.current = false, wait)
+                    const throttleTimerId = setTimeout(() => state.current.isScrolling = false, wait)
 
-                    setCurrentTarget(next.current)
+                    setActiveTarget(state.current.next)
 
                     return () => {
                         clearTimeout(scrollTimerId)
@@ -327,24 +333,21 @@ const useScrollIntoView = ({
                     if (direction > 0 && scrollTop + clientHeight === scrollHeight) return
                 }
 
-                setCurrentTarget(direction > 0 ? targets.current.length : -1)
-                isScrolling.current = false
+                setActiveTarget(direction > 0 ? targets.current.length : -1)
+                state.current.isScrolling = false
             }
-            cleanup.current = addEventListeners(root.current = node || document, onScroll, isScrolling)
+            state.current.cleanup = addEventListeners(root.current = node || document, onScroll, state.current)
         },
         [
             beforeScroll,
             debug,
             delay,
             directions,
-            isScrolling,
             mode,
-            next,
-            prev,
             root,
-            setCurrentTarget,
+            setActiveTarget,
             setObserverRoot,
-            target,
+            state,
             targets,
             touchSensitivity,
             wait,
