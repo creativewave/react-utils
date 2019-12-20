@@ -174,6 +174,7 @@ Both should be used. To set `document` as `root`, the corresponding callback ref
 - `wait` (default to `1000` ms) is a timeout value between two authorized scroll events
 - `mode` (default to `auto`) is the [scrolling behavior](https://drafts.csswg.org/cssom-view/#smooth-scrolling)
 - `onEnter` and `onExit` are optional callbacks defined in [`useIntersectionObserver`](#useIntersectionObserver)
+- `touchSensitivity` (default to `150`) is a distance in pixels that the finger or stylus should move to be handled as a scroll event
 
 ## useSVGMousePosition
 
