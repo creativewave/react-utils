@@ -34,7 +34,7 @@ export const WHEEL_BUTTON_ID = 1
  * TODO (better handle wheel events):
  * https://github.com/Promo/wheel-indicator/blob/master/lib/wheel-indicator.js#L109
  */
-const getScrollDirection = (event, previousTouch = {}) => {
+const getScrollDirection = (event, previousTouch = {}, touchSensitivity) => {
 
     const move = { x: 0, y: 0 }
 
@@ -51,7 +51,7 @@ const getScrollDirection = (event, previousTouch = {}) => {
         move.y = previousTouch.screenY - currentTouch.screenY
     }
 
-    if (event.type === 'touchmove' && (Math.abs(move.x) + Math.abs(move.y)) < TOUCH_SENSITIVITY) {
+    if (event.type === 'touchmove' && (Math.abs(move.x) + Math.abs(move.y)) < touchSensitivity) {
 
         return [0, 'static']
     }
@@ -139,6 +139,7 @@ const addEventListeners = (root, onScroll, isScrolling) => {
  *   onExit?: (IntersectionObserverEntry -> IntersectionObserver) -> void,
  *   rootMargin?: String,
  *   threshold?: Number,
+ *   touchSensitivity?: Number,
  *   wait?: Number,
  * }
  * CallbackRef :: Element?|null -> void
@@ -182,6 +183,7 @@ const useScrollIntoView = ({
     onExit = noop,
     rootMargin,
     threshold = 1,
+    touchSensitivity = TOUCH_SENSITIVITY,
     wait = 1000,
 } = {}) => {
 
@@ -259,7 +261,7 @@ const useScrollIntoView = ({
              */
             const onScroll = (event, firstTouch) => {
 
-                const [direction, alias] = getScrollDirection(event, firstTouch)
+                const [direction, alias] = getScrollDirection(event, firstTouch, touchSensitivity)
 
                 // (1)
                 if (direction === 0) {
@@ -344,6 +346,7 @@ const useScrollIntoView = ({
             setObserverRoot,
             target,
             targets,
+            touchSensitivity,
             wait,
         ])
     const setTarget = React.useCallback(
