@@ -46,7 +46,7 @@ This package contains common hooks and components to use in a React application.
 
 `useAnimateCustom` abstracts using `animate()`, a lightweight alternative to [`Element.animate()`](https://developer.mozilla.org/en-US/docs/Web/API/Web_Animations_API) or its [official polyfill](https://github.com/web-animations/web-animations-js), with some [extra features](https://github.com/creativewave/animate#extra-features).
 
-**Note:** this hook relies on [`@cdoublev/animate`](https://github.com/creativewave/animate) as a peer dependency.
+**Note:** this hook relies on [`@cdoublev/animate`](https://github.com/creativewave/animate) as an optional dependency to install manually.
 
 `useAnimateCustom :: Ref -> Animate`
 
@@ -75,7 +75,7 @@ Both should be used. `root` will default to `null` (ie. [`document`](https://w3c
 
 `Ref` is a React object ref containing the current `IntersectionObserver`. It can be used eg. to manually unobserve a target after a first intersection.
 
-Each observed `Element` will be unobserved before unmount, and the current `IntersectionObserver` will be disconnected before `root` unmounts, except if `root` corresponds to `document`, as it could be shared with other components in a different tree. Only one `IntersectionObserver` will actually be created for each unique set of intersection options.
+Each observed `Element` will be unobserved before unmount, and the current `IntersectionObserver` will be disconnected before `root` unmounts, except if `root` corresponds to `document`, as it could be shared with other components. Only one `IntersectionObserver` will be created for each unique set of intersection options.
 
 **Example:** [CodePen](https://codepen.io/creative-wave/pen/bGbwxRO)
 
