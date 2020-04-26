@@ -34,6 +34,9 @@
     "test:report": "jest -i --reporters='jest-junit'",
     "test:watch": "jest --watchAll -b"
   },
+  "dependencies": {
+    "core-js": "^3.5.0"
+  },
   "devDependencies": {
     "@babel/cli": "^7.7.4",
     "@babel/core": "^7.7.4",
@@ -42,7 +45,6 @@
     "@cdoublev/eslint-config": "^0.2.0",
     "babel-jest": "^24.9.0",
     "babel-loader": "^8.0.6",
-    "core-js": "^3.5.0",
     "eslint": "^6.7.2",
     "eslint-plugin-compat": "^3.3.0",
     "eslint-plugin-react": "^7.17.0",
