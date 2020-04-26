@@ -1,2 +1,5 @@
 
-module.exports = { extends: ['@cdoublev/eslint-config/react'] }
+module.exports = {
+    env: { jest: true },
+    extends: ['@cdoublev/eslint-config/react'],
+}
