@@ -1,7 +1,7 @@
 version: 2
 jobs:
   build:
-    working_directory: ~/use-definition
+    working_directory: ~/react-utils
     docker:
       - image: node:current
     steps:
