@@ -157,9 +157,9 @@ const ShadowInset = ({ offsetX = 0, offsetY = 0, ...props }) =>
     <>
         <feMorphology in={props.in} operator='dilate' radius={props.threshold} />
         <feGaussianBlur stdDeviation={props.blur} />
-        <ColorCorrection lightness={props.lightness} opacity={props.opacity} />
         <feOffset dx={offsetX} dy={offsetY} />
         <feComposite in='SourceGraphic' operator='out' />
+        <ColorCorrection lightness={props.lightness} opacity={props.opacity} />
         <feBlend in='SourceGraphic' mode='multiply' result={props.result} />
     </>
 
