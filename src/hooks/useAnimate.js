@@ -37,7 +37,7 @@ const useAnimate = ref => {
         [ref])
 
     React.useEffect(() => () => {
-        if (animation.current && animation.current.playState === 'running') {
+        if (animation.current?.playState === 'running') {
             animation.current.cancel()
         }
     }, [animation])

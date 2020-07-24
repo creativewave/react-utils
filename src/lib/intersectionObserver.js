@@ -102,6 +102,4 @@ const Mock = class IntersectionObserver { // eslint-disable-line no-undef
     }
 }
 
-export default (typeof window === 'undefined' || typeof window.IntersectionObserver === 'undefined')
-    ? Mock
-    : window.IntersectionObserver
+export default window?.IntersectionObserver ?? Mock

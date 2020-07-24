@@ -102,7 +102,7 @@ class IntersectionObserversCache {
         const [observer] = this.observers.find(([, observerOptions]) =>
             Object
                 .entries(observerOptions)
-                .every(([key, value]) => options[key] === value)) || []
+                .every(([key, value]) => options[key] === value)) ?? []
 
         return observer
     }
@@ -199,17 +199,13 @@ const useIntersectionObserver = ({
         memoize(id => node => {
             if (node === null) {
                 targets.current = targets.current.filter(([node, nodeId]) => {
-                    if (nodeId !== id) {
-                        return true
-                    } else if (observer.current) {
-                        observer.current.unobserve(node, { onEnter, onExit })
-                    }
+                    if (nodeId !== id) return true
+                    observer.current?.unobserve(node, { onEnter, onExit })
                     return false
                 })
                 return
-            } else if (observer.current) {
-                observer.current.observe(node, { onEnter, onExit })
             }
+            observer.current?.observe(node, { onEnter, onExit })
             targets.current.push([node, id])
         }),
         [observer, onEnter, onExit, targets])

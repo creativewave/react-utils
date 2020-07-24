@@ -203,9 +203,7 @@ const useScrollIntoView = ({
     const setActiveTarget = React.useCallback(index => state.current.active = index, [])
     const handleEnter = React.useCallback(
         entry => {
-            if (state.current.isScrolling
-                && targets.current[state.current.next]
-                && targets.current[state.current.next][1] !== entry.target) {
+            if (state.current.isScrolling && targets.current[state.current.next]?.[1] !== entry.target) {
                 return
             }
             setActiveTarget(targets.current.findIndex(([, node]) => node === entry.target))
@@ -219,9 +217,7 @@ const useScrollIntoView = ({
                 // Prevent exit from targets between current and next targets
                 || (state.current.next < 0 || state.current.next >= targets.current.length)
                 // Prevent exit from first/last target when scrolling above/below them.
-                || (state.current.isScrolling
-                    && targets.current[state.current.prev]
-                    && targets.current[state.current.prev][1] !== entry.target)) {
+                || (state.current.isScrolling && targets.current[state.current.prev]?.[1] !== entry.target)) {
                 return
             }
             onExit(entry)
@@ -288,7 +284,7 @@ const useScrollIntoView = ({
                 state.current.next = targets.current[userNextIndex] ? userNextIndex : nextIndex
                 state.current.prev = state.current.active
 
-                const nextTarget = targets.current[state.current.next] && targets.current[state.current.next][1]
+                const nextTarget = targets.current[state.current.next]?.[1]
 
                 log('[use-scroll-into-view]', debug, {
                     currentIndex: state.current.active,

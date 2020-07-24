@@ -182,7 +182,7 @@ it.each(cases)('%s', (_, Test) => {
      */
     act(() => {
 
-        config.root = root === document ? null : (root || null)
+        config.root = root === document ? null : (root ?? null)
         observer = observers.get(config)
         jest.spyOn(observer, 'observe')
 

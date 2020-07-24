@@ -197,7 +197,7 @@ it.each(cases)('%s', async (caseName, Test) => {
 
     // 2. It returns the mouse position on mousemove over target
     await act(async () => {
-        root = container.querySelector('#root') || document
+        root = container.querySelector('#root') ?? document
         root.scrollTop = 0
         root.scrollLeft = 0
         root.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: 1, clientY: 1 }))

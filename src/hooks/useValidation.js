@@ -39,7 +39,7 @@ const useValidation = ({ onChange, onBlur, validateOnChange = false }) => {
         if (!validateOnChange || !handleBlur(event)) {
             setError('')
         }
-        onChange && onChange(event)
+        onChange?.(event)
 
     }, [handleBlur, onChange, setError, validateOnChange])
 

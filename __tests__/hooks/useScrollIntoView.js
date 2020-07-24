@@ -249,7 +249,7 @@ it.each(cases)('%s', (_, Test) => {
      * a mouse with its middle (wheel) button pressed down.
      */
     act(() => {
-        root = container.querySelector('#root') || document
+        root = container.querySelector('#root') ?? document
         root.dispatchEvent(createEvent('pointerdown', { button: WHEEL_BUTTON_ID }))
         root.dispatchEvent(createEvent('pointerup', { pointerType: 'mouse' }))
     })
