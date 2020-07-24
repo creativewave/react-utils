@@ -1,5 +1,0 @@
-/__tests__/
-/.circleci/
-/src/
-babel.config.js
-.eslintrc.js
