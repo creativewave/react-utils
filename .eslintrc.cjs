@@ -7,8 +7,7 @@ const notPolyfilled = [
 ]
 
 module.exports = {
-    env: { jest: true },
-    extends: ['@cdoublev/eslint-config/react'],
+    extends: ['@cdoublev/eslint-config/react', '@cdoublev/eslint-config/jest'],
     settings: {
         polyfills: [
             'Object',
