@@ -223,7 +223,7 @@ it.each(cases)('%s', (_, Test) => {
      */
     act(() => {
 
-        targets = targets.slice(0, targets.length - 1)
+        targets = targets.slice(0, -1)
         observer = observers.get(config)
         jest.spyOn(observer, 'unobserve')
 
@@ -276,7 +276,7 @@ it('uses a single observer for a given set of IntersectionObserverOptions', () =
         jest.runOnlyPendingTimers() // (1)
     })
 
-    expect(observers.observers.length).toBe(1)
+    expect(observers.observers).toHaveLength(1)
     expect(config.componentA.onEnter).toHaveBeenCalledTimes(++calls.componentA.onEnter)
     expect(config.componentA.onExit).toHaveBeenCalledTimes(++calls.componentA.onExit)
     expect(config.componentB.onExit).toHaveBeenCalledTimes(calls.componentB.onExit += 2)

@@ -11,10 +11,10 @@ describe('raf', () => {
         ids.push(task.request(addTimestamp))
         ids.push(task.request(addTimestamp))
         ids.push(task.request(addTimestamp))
-        expect(ids.length).toBe(3)
+        expect(ids).toHaveLength(3)
         task.cancel(ids[2])
 
         // eslint-disable-next-line compat/compat
-        return Promise.resolve().then(() => expect(timestamps.length).toBe(2))
+        return Promise.resolve().then(() => expect(timestamps).toHaveLength(2))
     })
 })

@@ -9,8 +9,10 @@ let callbackReturnValues
 
 beforeEach(() => callbackReturnValues = [])
 
-// (1) The mock of IntersectionObserver use `setTimeout(callback, 0)` to delay
-// callback and simulate a real "scroll -> delay -> intersection" sequence.
+/**
+ * (1) The mock of IntersectionObserver use `setTimeout(callback, 0)` to delay
+ * callback and simulate a real "scroll -> delay -> intersection" sequence.
+ */
 jest.useFakeTimers()
 
 it('execute the callback when observing elements', () => {
@@ -19,7 +21,7 @@ it('execute the callback when observing elements', () => {
     elements.forEach(element => observer.observe(element))
 
     // Assert
-    elements.forEach(element => expect(observer.entries.includes(element)).toBe(true))
+    elements.forEach(element => expect(observer.entries).toContain(element))
     expect(callback).toHaveBeenCalledTimes(elements.length)
     callbackReturnValues.forEach(({ entries: [entry], observer: actualObserver }, index) => {
         expect(entry.isIntersecting).toBe(index === 0)

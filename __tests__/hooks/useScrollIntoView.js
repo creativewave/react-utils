@@ -1,12 +1,35 @@
 
 import { render, unmountComponentAtNode } from 'react-dom'
 import useScrollIntoView, { TOUCH_BUTTON_ID, TOUCH_SENSITIVITY, WHEEL_BUTTON_ID } from '../../src/hooks/useScrollIntoView'
-import PointerEvent from '../../__mocks__/PointerEvent'
 import React from 'react'
 import { act } from 'react-dom/test-utils'
 import { observers } from '../../src/hooks/useIntersectionObserver'
 
 const touches = jest.spyOn(TouchEvent.prototype, 'touches', 'get')
+
+/**
+ * PointerEvent
+ *
+ * It should mock the native `PointerEvent` for jsdom.
+ *
+ * Note: it can't be placed in `__mocks__/` otherwise ESLint will complain about
+ * a manually imported mock.
+ *
+ * TODO: remove it when jsdom supports it.
+ * Related: https://github.com/jsdom/jsdom/pull/2666
+ */
+class PointerEvent extends Event {
+
+    constructor(type, { button, pointerType, screenX, screenY, ...init }) {
+
+        super(type, init)
+
+        this.button = button
+        this.screenX = screenX
+        this.screenY = screenY
+        this.pointerType = pointerType
+    }
+}
 
 /**
  * createEvent :: (EventType -> EventInit) -> PointerEvent|TouchEvent|WheelEvent
@@ -214,9 +237,12 @@ it.each(cases)('%s', (_, Test) => {
     expect(config.onEnter).toHaveBeenCalledTimes(++calls.onEnter)
     expect(config.onExit).toHaveBeenCalledTimes(calls.onExit)
 
-    // TODO: add test cases to fix when no target is intersecting on load
-    // 1. Load above first / below last target: targetIndex should be -1 / target.length
-    // 2. Load between two targets: targetIndex should be the one with the greatest intersection ratio
+    /**
+     * TODO: add test cases to fix when no target is intersecting on load
+     *
+     * 1. Load above first / below last target: targetIndex should be -1 / target.length
+     * 2. Load between two targets: targetIndex should be the one with the greatest intersection ratio
+     */
 
     /**
      * It should execute PointerEvent.preventDefault() on `pointerdown` if it's
@@ -255,10 +281,12 @@ it.each(cases)('%s', (_, Test) => {
         ++targets.currentIndex
     })
 
-    expect(config.beforeScroll)
-        .toHaveBeenNthCalledWith(++calls.beforeScroll, targets.currentIndex, targets.prevIndex, 'down')
-    expect(targets.current.scrollIntoView)
-        .toHaveBeenNthCalledWith(1, { behavior: config.mode })
+    expect(config.beforeScroll).toHaveBeenNthCalledWith(
+        ++calls.beforeScroll,
+        targets.currentIndex,
+        targets.prevIndex,
+        'down')
+    expect(targets.current.scrollIntoView).toHaveBeenNthCalledWith(1, { behavior: config.mode })
     expect(config.onEnter).toHaveBeenCalledTimes(++calls.onEnter)
     expect(config.onExit).toHaveBeenCalledTimes(++calls.onExit)
     expect(WheelEvent.prototype.preventDefault).toHaveBeenCalledTimes(++calls.preventDefault.wheel)
@@ -280,12 +308,13 @@ it.each(cases)('%s', (_, Test) => {
         ++targets.currentIndex
     })
 
-    expect(config.beforeScroll)
-        .toHaveBeenNthCalledWith(++calls.beforeScroll, targets.currentIndex, targets.prevIndex, 'down')
-    expect(targets.current.scrollIntoView)
-        .toHaveBeenNthCalledWith(1, { behavior: config.mode })
-    expect(TouchEvent.prototype.preventDefault)
-        .toHaveBeenCalledTimes(++calls.preventDefault.touchMove)
+    expect(config.beforeScroll).toHaveBeenNthCalledWith(
+        ++calls.beforeScroll,
+        targets.currentIndex,
+        targets.prevIndex,
+        'down')
+    expect(targets.current.scrollIntoView).toHaveBeenNthCalledWith(1, { behavior: config.mode })
+    expect(TouchEvent.prototype.preventDefault).toHaveBeenCalledTimes(++calls.preventDefault.touchMove)
 
     /**
      * It executes observer.observe() -> onExit() when mounting a new target.
@@ -392,7 +421,8 @@ it.each(cases)('%s', (_, Test) => {
     expect(config.beforeScroll).toHaveBeenNthCalledWith(
         ++calls.beforeScroll,
         targets.currentIndex + 1,
-        targets.currentIndex, 'down')
+        targets.currentIndex,
+        'down')
     expect(config.onExit).toHaveBeenCalledTimes(calls.onExit)
 
     /**
@@ -437,7 +467,7 @@ it.each(cases)('%s', (_, Test) => {
     act(() => {
         observer = observers.observers[0][0] // eslint-disable-line prefer-destructuring
         jest.spyOn(observer, 'unobserve')
-        render(<Test config={config} targets={targets.ids = targets.ids.slice(0, targets.ids.length - 1)} />, container)
+        render(<Test config={config} targets={targets.ids.slice(0, -1)} />, container)
     })
 
     expect(observer.unobserve).toHaveBeenCalledTimes(1)

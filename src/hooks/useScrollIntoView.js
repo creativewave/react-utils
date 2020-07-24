@@ -95,8 +95,7 @@ const addEventListeners = (root, onScroll, state) => {
             }
             state.isScrolling = true
         }
-        // Target found to scroll into view: prevent current and incoming events
-        // to be handled by UA
+        // Target to scroll into view: prevent UA to handle current and incoming events
         event.preventDefault()
         return event.returnValue = false
     }
@@ -352,6 +351,7 @@ const useScrollIntoView = ({
             touchSensitivity,
             wait,
         ])
+    /* eslint-disable react-hooks/exhaustive-deps */
     const setTarget = React.useCallback(
         memoize(id => node => {
 
@@ -364,6 +364,7 @@ const useScrollIntoView = ({
             }
         }),
         [setObserverTarget, targets])
+    /* eslint-enable react-hooks/exhaustive-deps */
 
     return [setRoot, setTarget, observer]
 }

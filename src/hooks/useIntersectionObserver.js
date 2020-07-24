@@ -170,8 +170,10 @@ const useIntersectionObserver = ({
             const options = { root: root.current, rootMargin, threshold }
 
             if (node === null) {
-                // Don't remove an observer that has document (null) as root
-                // (it may be used by other components)
+                /**
+                 * Don't remove an observer that has document (null) as root
+                 * (it may be used by other components)
+                 */
                 if (root.current === null) {
                     targets.current.forEach(([target]) => observer.current.unobserve(target, { onEnter, onExit }))
                 } else {
@@ -183,13 +185,16 @@ const useIntersectionObserver = ({
                 return
             }
 
-            // Handle `setRoot(document)` (root requires Element|null)
-            // Handle `setRoot()` (undefined -> null)
-            options.root = root.current = node === document ? null : (node || null)
-            observer.current = observers.get(options) || observers.set(options)
+            /**
+             * Handle `setRoot(document)` (root requires Element|null)
+             * Handle `setRoot()` (undefined -> null)
+             */
+            options.root = root.current = node === document ? null : (node ?? null)
+            observer.current = observers.get(options) ?? observers.set(options)
             targets.current.forEach(([target]) => observer.current.observe(target, { onEnter, onExit }))
         },
         [observer, onEnter, onExit, root, rootMargin, targets, threshold])
+    /* eslint-disable react-hooks/exhaustive-deps */
     const setTarget = React.useCallback(
         memoize(id => node => {
             if (node === null) {
@@ -208,6 +213,7 @@ const useIntersectionObserver = ({
             targets.current.push([node, id])
         }),
         [observer, onEnter, onExit, targets])
+    /* eslint-enable react-hooks/exhaustive-deps */
 
     return [setRoot, setTarget, observer]
 }

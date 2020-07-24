@@ -170,7 +170,7 @@ const cases = [
                 // `setTarget` doesn't have to be re-initialized (see memo avove: `root` already handles it)
             },
             [forcedUpdate, setTarget])
-        React.useEffect(forceUpdate, [])
+        React.useEffect(forceUpdate, [forceUpdate])
 
         return (
             <div id='root' ref={root}>
@@ -206,8 +206,7 @@ it.each(cases)('%s', async (caseName, Test) => {
     expect(rect.getAttribute('x')).toBe('0')
     expect(rect.getAttribute('y')).toBe('0')
 
-    // 3. It returns the mouse position on mousemove over root but not over target
-    // Note: this test is meaningless when root === target (even if it runs successfully)
+    // 3. It returns the mouse position on mousemove over root but not over target (meaningless when root === target (even if it runs successfully))
     await act(async () => {
         root.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: 0, clientY: 0 }))
     })
