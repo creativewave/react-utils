@@ -55,10 +55,17 @@ export default [
         plugins: [replaceEnv, babel(getBabelConfig({ esmodules: true }))],
     },
     {
+        external,
         input: 'src/index.js',
         output: {
             file: pkg.unpkg,
-            format: 'iife',
+            format: 'umd',
+            globals: {
+                '@cdoublev/animate': 'animate',
+                'prop-types': 'PropTypes',
+                'react': 'React',
+                'react-dom': 'ReactDOM',
+            },
             name: 'ReactUtils',
         },
         plugins: [
