@@ -59,7 +59,7 @@ export default [
         output: {
             file: pkg.unpkg,
             format: 'iife',
-            name: 'animate',
+            name: 'ReactUtils',
         },
         plugins: [
             replaceEnv,
