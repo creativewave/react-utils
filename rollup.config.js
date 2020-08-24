@@ -12,13 +12,13 @@ const {
     peerDependencies = {},
 } = pkg
 
-const pattern = `^(${Object.keys({
+const regexp = new RegExp(`^(${Object.keys({
     ...dependencies,
     ...optionalDependencies,
     ...peerDependencies,
-}).concat('prop-types').join('|')})`
+}).concat('prop-types').join('|')})`)
 
-const external = id => (new RegExp(pattern)).test(id)
+const external = id => regexp.test(id)
 
 const replaceEnv = replace({ 'process.env.NODE_ENV': process.env.NODE_ENV })
 
