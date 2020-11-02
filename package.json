@@ -59,7 +59,7 @@
     "rollup-plugin-terser": "^7.0.0"
   },
   "peerDependencies": {
-    "react": "^16.7.0-alpha.0"
+    "react": "^16.7.0-alpha.0 || ^17.0.0-rc.2"
   },
   "optionalDependencies": {
     "@cdoublev/animate": "^0.1.0"
