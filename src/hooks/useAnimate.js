@@ -25,15 +25,9 @@ const useAnimate = ref => {
     const animation = React.useRef()
     const animate = React.useCallback(
         (keyframes, options) => {
-            if (!ref.current) {
-                return
+            if (ref.current) {
+                return animation.current = ref.current.animate(keyframes, options)
             }
-            animation.current = ref.current.animate(keyframes, options)
-            // eslint-disable-next-line compat/compat
-            animation.current.then = fn => new Promise(resolve => {
-                animation.current.onfinish = () => resolve(fn(animation.current))
-            })
-            return animation.current
         },
         [ref])
 
