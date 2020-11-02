@@ -1,4 +1,3 @@
-/* eslint-disable no-undef, compat/compat */
 
 import now from './now'
 
@@ -8,7 +7,7 @@ const cancelledTaskIds = []
 export const microtask = {
     cancel: taskId => cancelledTaskIds.push(taskId),
     request: fn => {
-        Promise.resolve(currentTaskId).then(taskId => {
+        Promise.resolve(currentTaskId).then(taskId => { // eslint-disable-line compat/compat
             if (cancelledTaskIds.includes(taskId)) {
                 return
             }
@@ -18,8 +17,14 @@ export const microtask = {
     },
 }
 
+/**
+ * Memo: binding `cancel|requestAnimationFrame()` will throw illegal invocation
+ * error.
+ */
+const animation = { cancel: id => cancelAnimationFrame(id), request: fn => requestAnimationFrame(fn) }
+
 const task = process.env.NODE_ENV === 'test' // eslint-disable-line no-undef
     ? microtask
-    : { cancel: id => cancelAnimationFrame(id), request: fn => requestAnimationFrame(fn) }
+    : animation
 
 export default task

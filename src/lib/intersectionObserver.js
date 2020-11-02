@@ -11,7 +11,7 @@ import { universalDocument as document } from './universal'
  * 6. `callback` is executed with `isIntersecting` and `[{ target: Element }]`
  *    (instead of `[IntersectionObserverEntry]`) after a vertical wheel
  */
-const Mock = class IntersectionObserver { // eslint-disable-line no-undef
+const Mock = class IntersectionObserver {
 
     constructor(callback, { root = null } = {}) {
 
