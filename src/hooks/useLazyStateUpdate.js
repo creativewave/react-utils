@@ -1,14 +1,14 @@
 
-import React from 'react'
+import { useEffect, useState } from 'react'
 
 /**
  * useLazyStateUpdate :: (a -> Number?) -> a
  */
 const useLazyStateUpdate = (initialState, delay = 100) => {
 
-    const [state, set] = React.useState(initialState)
+    const [state, set] = useState(initialState)
 
-    React.useEffect(() => {
+    useEffect(() => {
 
         if (state === initialState) return
 

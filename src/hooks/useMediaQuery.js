@@ -1,14 +1,14 @@
 
-import React from 'react'
+import { useEffect, useState } from 'react'
 
 /**
  * useInterval :: String -> Boolean
  */
 const useMediaQuery = query => {
 
-    const [hasMatch, setHasMatch] = React.useState(false)
+    const [hasMatch, setHasMatch] = useState(false)
 
-    React.useEffect(() => {
+    useEffect(() => {
 
         const list = window.matchMedia(query)
         const handleChange = ({ matches }) => setHasMatch(matches)

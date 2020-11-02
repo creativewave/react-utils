@@ -1,5 +1,5 @@
 
-import React from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 
 /**
  * useAnimate :: Ref -> (Keyframes -> Options) -> Animate
@@ -9,8 +9,8 @@ import React from 'react'
  */
 const useAnimate = ref => {
 
-    const animation = React.useRef()
-    const animate = React.useCallback(
+    const animation = useRef()
+    const animate = useCallback(
         (keyframes, options) => {
             if (ref.current) {
                 return animation.current = ref.current.animate(keyframes, options)
@@ -18,7 +18,7 @@ const useAnimate = ref => {
         },
         [ref])
 
-    React.useEffect(() => () => {
+    useEffect(() => () => {
         if (animation.current?.playState === 'running') {
             animation.current.cancel()
         }

@@ -1,6 +1,6 @@
 
 import { render, unmountComponentAtNode } from 'react-dom'
-import React from 'react'
+import { useEffect, useState } from 'react'
 import { act } from 'react-dom/test-utils'
 import useSVGMousePosition from '../../src/hooks/useSVGMousePosition'
 
@@ -64,7 +64,7 @@ const cases = [
 
         const [position, setTarget] = useSVGMousePosition({ precision })
 
-        React.useEffect(() => {
+        useEffect(() => {
             setTarget(document.getElementById('root'))
             // Reproduce the behavior of an updated callback ref (see memo above)
             return () => setTarget(null)
@@ -80,7 +80,7 @@ const cases = [
         const [position, setTarget, root] = useSVGMousePosition({ hasRoot: true, precision })
 
         // `setTarget` doesn't have to be re-initialized (see memo avove: `root` already handles it)
-        React.useEffect(() => setTarget(document.getElementById('target')), [setTarget])
+        useEffect(() => setTarget(document.getElementById('target')), [setTarget])
 
         return (
             <div id='root' ref={root}>
@@ -94,7 +94,7 @@ const cases = [
         const [position, target, setRoot] = useSVGMousePosition({ hasRoot: true, precision })
 
         // `setRoot` doesn't have to be re-initialized (see memo avove: `target` already handles it)
-        React.useEffect(() => setRoot(document.getElementById('root')), [setRoot])
+        useEffect(() => setRoot(document.getElementById('root')), [setRoot])
 
         return (
             <div id='root'>
@@ -119,7 +119,7 @@ const cases = [
 
         const [position, setTarget, setRoot] = useSVGMousePosition({ precision })
 
-        React.useEffect(
+        useEffect(
             () => {
                 setRoot(document.getElementById('root'))
                 setTarget(document.getElementById('target'))
@@ -141,7 +141,7 @@ const cases = [
 
         const [position, setTarget, setRoot] = useSVGMousePosition({ hasRoot: true, precision })
 
-        React.useEffect(
+        useEffect(
             () => {
                 setTarget(document.getElementById('target'))
                 setRoot(document.getElementById('root'))
@@ -162,15 +162,15 @@ const cases = [
     ['set target on consecutive updates in useEffect()', ({ precision }) => {
 
         const [position, setTarget, root] = useSVGMousePosition({ hasRoot: true, precision })
-        const [forcedUpdate, forceUpdate] = React.useState(true)
+        const [forcedUpdate, forceUpdate] = useState(true)
 
-        React.useEffect(
+        useEffect(
             () => {
                 setTarget(document.getElementById('target'))
                 // `setTarget` doesn't have to be re-initialized (see memo avove: `root` already handles it)
             },
             [forcedUpdate, setTarget])
-        React.useEffect(forceUpdate, [forceUpdate])
+        useEffect(forceUpdate, [forceUpdate])
 
         return (
             <div id='root' ref={root}>

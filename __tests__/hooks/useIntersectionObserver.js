@@ -1,7 +1,7 @@
 
 import { render, unmountComponentAtNode } from 'react-dom'
+import { useEffect, useRef } from 'react'
 import useIntersectionObserver, { ExtendedIntersectionObserver, observers } from '../../src/hooks/useIntersectionObserver'
-import React from 'react'
 import { act } from 'react-dom/test-utils'
 
 let container
@@ -44,7 +44,7 @@ const cases = [
 
         const [setRoot, setTarget] = useIntersectionObserver(config)
 
-        React.useEffect(
+        useEffect(
             () => {
                 setRoot(document.getElementById('root'))
                 return () => setRoot(null)
@@ -59,9 +59,9 @@ const cases = [
     ['set targets in useEffect()', ({ config, targets }) => {
 
         const [root, setTarget] = useIntersectionObserver(config)
-        const prevTargets = React.useRef([])
+        const prevTargets = useRef([])
 
-        React.useEffect(
+        useEffect(
             () => {
                 targets.forEach(id => {
                     if (!prevTargets.current.includes(id)) {
@@ -82,9 +82,9 @@ const cases = [
     ['set root and targets in useEffect()', ({ config, targets }) => {
 
         const [setRoot, setTarget] = useIntersectionObserver(config)
-        const prevTargets = React.useRef([])
+        const prevTargets = useRef([])
 
-        React.useEffect(
+        useEffect(
             () => {
                 prevTargets.current = prevTargets.current.filter(id =>
                     targets.includes(id) || setTarget(id)(null))
@@ -97,7 +97,7 @@ const cases = [
             },
             [prevTargets, setTarget, targets])
 
-        React.useEffect(
+        useEffect(
             () => {
                 setRoot(document.getElementById('root'))
                 return () => {
@@ -115,7 +115,7 @@ const cases = [
 
         const [setRoot, setTarget] = useIntersectionObserver(config)
 
-        React.useEffect(() => {
+        useEffect(() => {
             setRoot()
             return () => setRoot(null)
         }, [setRoot])
@@ -126,7 +126,7 @@ const cases = [
 
         const [setRoot, setTarget] = useIntersectionObserver(config)
 
-        React.useEffect(() => {
+        useEffect(() => {
             setRoot(document)
             return () => setRoot(null)
         }, [setRoot])

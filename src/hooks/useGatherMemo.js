@@ -1,5 +1,5 @@
 
-import React from 'react'
+import { useMemo, useRef } from 'react'
 import shallowEqual from '../lib/shallowEqual'
 
 /**
@@ -7,15 +7,15 @@ import shallowEqual from '../lib/shallowEqual'
  */
 const useGatherMemo = (object, ...props) => {
 
-    const ref = React.useRef(object)
-    const rest = React.useRef({})
+    const ref = useRef(object)
+    const rest = useRef({})
 
     if (!shallowEqual(ref.current, object)) {
         ref.current = object
         rest.current = {}
     }
 
-    return React.useMemo(
+    return useMemo(
         () => Object.keys(ref.current).reduce(
             (gather, key) => {
                 if (props.includes(key)) return gather

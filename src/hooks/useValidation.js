@@ -1,5 +1,5 @@
 
-import React from 'react'
+import { useCallback, useState } from 'react'
 
 /**
  * useValidation :: Props -> [String, Props]
@@ -16,9 +16,9 @@ import React from 'react'
  */
 const useValidation = ({ onChange, onBlur, validateOnChange = false }) => {
 
-    const [error, setError] = React.useState()
+    const [error, setError] = useState()
 
-    const handleBlur = React.useCallback(event => {
+    const handleBlur = useCallback(event => {
 
         const hasError =
             event.target.willValidate
@@ -34,7 +34,7 @@ const useValidation = ({ onChange, onBlur, validateOnChange = false }) => {
 
     }, [onBlur])
 
-    const handleChange = React.useCallback(event => {
+    const handleChange = useCallback(event => {
 
         if (!validateOnChange || !handleBlur(event)) {
             setError('')

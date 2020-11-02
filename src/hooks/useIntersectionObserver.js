@@ -1,6 +1,6 @@
 
+import { useCallback, useRef } from 'react'
 import IntersectionObserver from '../lib/intersectionObserver'
-import React from 'react'
 import log from '../lib/log'
 import memoize from '../lib/memoize'
 import noop from '../lib/noop'
@@ -161,10 +161,10 @@ const useIntersectionObserver = ({
 
     DEBUG = debug
 
-    const observer = React.useRef()
-    const root = React.useRef()
-    const targets = React.useRef([])
-    const setRoot = React.useCallback(
+    const observer = useRef()
+    const root = useRef()
+    const targets = useRef([])
+    const setRoot = useCallback(
         node => {
 
             const options = { root: root.current, rootMargin, threshold }
@@ -195,7 +195,7 @@ const useIntersectionObserver = ({
         },
         [observer, onEnter, onExit, root, rootMargin, targets, threshold])
     /* eslint-disable react-hooks/exhaustive-deps */
-    const setTarget = React.useCallback(
+    const setTarget = useCallback(
         memoize(id => node => {
             if (node === null) {
                 targets.current = targets.current.filter(([node, nodeId]) => {

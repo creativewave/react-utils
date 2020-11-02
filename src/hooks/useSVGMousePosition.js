@@ -1,5 +1,5 @@
 
-import React from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import noop from '../lib/noop'
 import round from '../lib/round'
 import task from '../lib/task'
@@ -38,15 +38,15 @@ const useSVGMousePosition = ({
     precision = 2,
 } = {}) => {
 
-    const [position, setPosition] = React.useState(initial)
+    const [position, setPosition] = useState(initial)
 
-    const didMount = React.useRef(false)
-    const root = React.useRef()
-    const target = React.useRef()
-    const cleanup = React.useRef(noop)
-    const timerId = React.useRef()
+    const didMount = useRef(false)
+    const root = useRef()
+    const target = useRef()
+    const cleanup = useRef(noop)
+    const timerId = useRef()
 
-    const initListener = React.useCallback(
+    const initListener = useCallback(
         (root, target) => {
 
             const updatePosition = event => {
@@ -77,7 +77,7 @@ const useSVGMousePosition = ({
         },
         [isFixed, precision, setPosition, timerId])
 
-    const setRoot = React.useCallback(
+    const setRoot = useCallback(
         node => {
             if (node === root.current) {
                 return
@@ -91,7 +91,7 @@ const useSVGMousePosition = ({
             initListener(root.current, target.current)
         },
         [cleanup, initListener, root, target])
-    const setTarget = React.useCallback(
+    const setTarget = useCallback(
         node => {
             if (node === target.current) {
                 return
@@ -106,7 +106,7 @@ const useSVGMousePosition = ({
         },
         [cleanup, hasRoot, initListener, root, target])
 
-    React.useEffect(
+    useEffect(
         () => {
             if (!didMount.current) {
                 didMount.current = true

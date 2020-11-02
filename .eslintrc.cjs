@@ -30,4 +30,7 @@ module.exports = {
         },
     ],
     parser: '@babel/eslint-parser',
+    rules: {
+        "react/react-in-jsx-scope": "off",
+    },
 }
