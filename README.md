@@ -38,7 +38,7 @@ This package contains common hooks and components to use in a React application.
 
 `Animate` is a `Function` that has the following signature: `Animate :: (Keyframes -> Options?|Number?) -> Animation`.
 
-`Animation` [(W3C)](https://drafts.csswg.org/web-animations/#the-animation-interface) will be cancelled if it's still running when the component unmounts, and is extended with `.then()` as an alias to `Animation.finished`.
+`Animation` [(W3C)](https://drafts.csswg.org/web-animations/#the-animation-interface) will be cancelled if it's still running when the component unmounts.
 
 **Example:** [CodePen](https://codepen.io/creative-wave/pen/JjjZRyE)
 
