@@ -3,9 +3,10 @@ import React from 'react'
 import animate from '@cdoublev/animate'
 
 /**
- * useAnimateCustom :: Ref -> (Keyframes -> Options) -> Animation
+ * useAnimateCustom :: Ref -> (Keyframes -> Options) -> Animate
  *
  * Ref => { current: Element }
+ * Animate :: (Keyframes|MotionPath -> Options?|Number?) -> Animation
  */
 const useAnimateCustom = ref => {
 
