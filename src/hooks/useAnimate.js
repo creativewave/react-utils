@@ -2,9 +2,10 @@
 import React from 'react'
 
 /**
- * useAnimate :: Ref -> (Keyframes -> Options) -> Animation
+ * useAnimate :: Ref -> (Keyframes -> Options) -> Animate
  *
  * Ref => { current: Element }
+ * Animate :: (Keyframes -> Options?|Number?) -> Animation
  *
  * It should abstract:
  *   `const [animation, setAnimation] = useState()`

@@ -36,7 +36,7 @@ This package contains common hooks and components to use in a React application.
 
 `Ref` should be a React reference object containing an `Element`, ie. `Ref => { current: Element }`.
 
-`Animate` is a `Function` that has the following signature: `Animate :: (Keyframes -> Options) -> Animation`.
+`Animate` is a `Function` that has the following signature: `Animate :: (Keyframes -> Options?|Number?) -> Animation`.
 
 `Animation` [(W3C)](https://drafts.csswg.org/web-animations/#the-animation-interface) will be cancelled if it's still running when the component unmounts, and is extended with `.then()` as an alias to `Animation.finished`.
 
