@@ -34,15 +34,6 @@ export default [
         external: id => buildExternalRegexp.test(id),
         input: 'src/index.js',
         output: {
-            file: pkg.main,
-            format: 'cjs',
-        },
-        plugins: [replaceEnv, babel(getBabelConfig({ node: true }))],
-    },
-    {
-        external: id => buildExternalRegexp.test(id),
-        input: 'src/index.js',
-        output: {
             file: pkg.module,
             format: 'es',
         },
