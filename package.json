@@ -8,6 +8,9 @@
     "react-hooks"
   ],
   "version": "0.7.4",
+  "engines": {
+    "node": ">= 14"
+  },
   "homepage": "https://github.com/creativewave/react-utils",
   "bugs": "https://github.com/creativewave/react-utils/issues",
   "repository": "github:creativewave/react-utils",
