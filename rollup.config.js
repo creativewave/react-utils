@@ -6,19 +6,13 @@ import pkg from './package.json'
 import replace from '@rollup/plugin-replace'
 import { terser } from 'rollup-plugin-terser'
 
-const {
-    dependencies = {},
-    optionalDependencies = {},
-    peerDependencies = {},
-} = pkg
-
-const regexp = new RegExp(`^(${Object.keys({
-    ...dependencies,
-    ...optionalDependencies,
-    ...peerDependencies,
-}).concat('prop-types').join('|')})`)
-
-const external = id => regexp.test(id)
+const browserExternals = Object.keys({
+    ...pkg.optionalDependencies,
+    ...pkg.peerDependencies,
+}).concat('prop-types')
+const buildExternals = browserExternals.concat(Object.keys(pkg.dependencies))
+const buildExternalRegexp = new RegExp(`^(${buildExternals.join('|')})`)
+const browserExternalRegexp = new RegExp(`^(${browserExternals.join('|')})`)
 
 const replaceEnv = replace({ 'process.env.NODE_ENV': process.env.NODE_ENV })
 
@@ -37,7 +31,7 @@ const getBabelConfig = targets => ({
 
 export default [
     {
-        external,
+        external: id => buildExternalRegexp.test(id),
         input: 'src/index.js',
         output: {
             file: pkg.main,
@@ -46,7 +40,7 @@ export default [
         plugins: [replaceEnv, babel(getBabelConfig({ node: true }))],
     },
     {
-        external,
+        external: id => buildExternalRegexp.test(id),
         input: 'src/index.js',
         output: {
             file: pkg.module,
@@ -55,7 +49,7 @@ export default [
         plugins: [replaceEnv, babel(getBabelConfig({ esmodules: true }))],
     },
     {
-        external,
+        external: id => browserExternalRegexp.test(id),
         input: 'src/index.js',
         output: {
             file: pkg.unpkg,
