@@ -1,4 +1,4 @@
-/* eslint-disable no-undef, compat/compat */
+/* eslint-disable no-undef */
 
 const now = process.env.NODE_ENV === 'test'
     ? require('perf_hooks').performance.now

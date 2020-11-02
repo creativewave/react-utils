@@ -14,7 +14,6 @@ describe('raf', () => {
         expect(ids).toHaveLength(3)
         task.cancel(ids[2])
 
-        // eslint-disable-next-line compat/compat
         return Promise.resolve().then(() => expect(timestamps).toHaveLength(2))
     })
 })

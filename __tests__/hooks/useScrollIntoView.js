@@ -48,7 +48,7 @@ const createEvent = (type, { button, pointerType, x = 0, y = 0 } = {}) => {
             return new PointerEvent(type, init)
         case 'touchmove':
             touches.mockReturnValueOnce([{ screenX: x * TOUCH_SENSITIVITY, screenY: y * TOUCH_SENSITIVITY }])
-            return new TouchEvent(type, init) // eslint-disable-line compat/compat
+            return new TouchEvent(type, init)
         case 'wheel':
             init.deltaX = x
             init.deltaY = y
