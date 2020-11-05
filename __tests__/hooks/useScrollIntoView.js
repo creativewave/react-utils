@@ -1,7 +1,7 @@
 
 import { render, unmountComponentAtNode } from 'react-dom'
-import { useEffect, useRef } from 'react'
 import useScrollIntoView, { TOUCH_BUTTON_ID, TOUCH_SENSITIVITY, WHEEL_BUTTON_ID } from '../../src/hooks/useScrollIntoView'
+import React from 'react'
 import { act } from 'react-dom/test-utils'
 import { observers } from '../../src/hooks/useIntersectionObserver'
 
@@ -100,7 +100,7 @@ const cases = [
 
         const [setRoot, setTarget] = useScrollIntoView(config)
 
-        useEffect(
+        React.useEffect(
             () => {
                 setRoot(document.getElementById('root'))
                 return () => setRoot(null)
@@ -115,9 +115,9 @@ const cases = [
     ['set targets in useEffect()', ({ config, targets }) => {
 
         const [root, setTarget] = useScrollIntoView(config)
-        const prevTargets = useRef([])
+        const prevTargets = React.useRef([])
 
-        useEffect(
+        React.useEffect(
             () => {
                 targets.forEach(id => {
                     if (!prevTargets.current.includes(id)) {
@@ -138,9 +138,9 @@ const cases = [
     ['set root and targets in useEffect()', ({ config, targets }) => {
 
         const [setRoot, setTarget] = useScrollIntoView(config)
-        const prevTargets = useRef([])
+        const prevTargets = React.useRef([])
 
-        useEffect(
+        React.useEffect(
             () => {
                 targets.forEach(id => {
                     if (!prevTargets.current.includes(id)) {
@@ -153,7 +153,7 @@ const cases = [
             },
             [prevTargets, setTarget, targets])
 
-        useEffect(
+        React.useEffect(
             () => {
 
                 setRoot(document.getElementById('root'))
@@ -173,7 +173,7 @@ const cases = [
 
         const [setRoot, setTarget] = useScrollIntoView(config)
 
-        useEffect(() => {
+        React.useEffect(() => {
             setRoot()
             return () => setRoot(null)
         }, [setRoot])
@@ -184,7 +184,7 @@ const cases = [
 
         const [setRoot, setTarget] = useScrollIntoView(config)
 
-        useEffect(() => {
+        React.useEffect(() => {
             setRoot(document)
             return () => setRoot(null)
         }, [setRoot])

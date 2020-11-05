@@ -1,5 +1,5 @@
 
-import { useEffect, useRef } from 'react'
+import React from 'react'
 
 /**
  * useInterval :: ((x -> x) -> Number) -> void
@@ -9,10 +9,10 @@ import { useEffect, useRef } from 'react'
  */
 const useInterval = (fn, delay) => {
 
-    const ref = useRef()
+    const ref = React.useRef()
 
-    useEffect(() => { ref.current = fn }, [fn]) // eslint-disable-line brace-style
-    useEffect(() => {
+    React.useEffect(() => { ref.current = fn }, [fn]) // eslint-disable-line brace-style
+    React.useEffect(() => {
         if (typeof delay === 'undefined') return
         const id = setInterval(ref.current, delay)
         return () => clearInterval(id)

@@ -1,5 +1,5 @@
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React from 'react'
 
 /**
  * useTransition :: { transitions: [Transition], onExit: [Transition] }
@@ -23,19 +23,19 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
  */
 const useTransition = ({ transitions, onExit }) => {
 
-    const initialState = useMemo(
+    const initialState = React.useMemo(
         () => transitions.reduce((state, [x, delay]) => {
             if (delay === 0) state.push(x)
             return state
         }, []),
         [transitions])
-    const [state, setState] = useState(initialState)
-    const [isMounted, setIsMounted] = useState(true)
-    const [i, restart] = useState(true)
-    const { current: ids } = useRef([])
-    const reset = useCallback(() => restart(i => !i), [restart])
+    const [state, setState] = React.useState(initialState)
+    const [isMounted, setIsMounted] = React.useState(true)
+    const [i, restart] = React.useState(true)
+    const { current: ids } = React.useRef([])
+    const reset = React.useCallback(() => restart(i => !i), [restart])
 
-    useEffect(() => {
+    React.useEffect(() => {
 
         if (!isMounted) {
             return

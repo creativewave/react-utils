@@ -1,5 +1,5 @@
 
-import { useCallback, useEffect, useRef } from 'react'
+import React from 'react'
 import animate from '@cdoublev/animate'
 
 /**
@@ -10,8 +10,8 @@ import animate from '@cdoublev/animate'
  */
 const useAnimateCustom = ref => {
 
-    const animation = useRef()
-    const customAnimate = useCallback(
+    const animation = React.useRef()
+    const customAnimate = React.useCallback(
         (keyframes, options) => {
             if (ref.current) {
                 return animation.current = animate(ref.current, keyframes, options)
@@ -19,7 +19,7 @@ const useAnimateCustom = ref => {
         },
         [ref])
 
-    useEffect(() => () => {
+    React.useEffect(() => () => {
         if (animation.current?.playState === 'running') {
             animation.current.cancel()
         }

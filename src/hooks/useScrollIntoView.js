@@ -1,5 +1,5 @@
 
-import { useCallback, useRef } from 'react'
+import React from 'react'
 import { universalDocument as document } from '../lib/universal'
 import log from '../lib/log'
 import memoize from '../lib/memoize'
@@ -196,12 +196,12 @@ const useScrollIntoView = ({
     wait = 1000,
 } = {}) => {
 
-    const state = useRef(initialState)
-    const root = useRef()
-    const targets = useRef([])
+    const state = React.useRef(initialState)
+    const root = React.useRef()
+    const targets = React.useRef([])
 
-    const setActiveTarget = useCallback(index => state.current.active = index, [])
-    const handleEnter = useCallback(
+    const setActiveTarget = React.useCallback(index => state.current.active = index, [])
+    const handleEnter = React.useCallback(
         entry => {
             if (state.current.isScrolling && targets.current[state.current.next]?.[1] !== entry.target) {
                 return
@@ -210,7 +210,7 @@ const useScrollIntoView = ({
             onEnter(entry)
         },
         [onEnter, setActiveTarget, state, targets])
-    const handleExit = useCallback(
+    const handleExit = React.useCallback(
         entry => {
             if (// Prevent exit on load
                 state.current.next === null
@@ -231,7 +231,7 @@ const useScrollIntoView = ({
         threshold,
     })
 
-    const setRoot = useCallback(
+    const setRoot = React.useCallback(
         node => {
 
             setObserverRoot(node)
@@ -348,7 +348,7 @@ const useScrollIntoView = ({
             wait,
         ])
     /* eslint-disable react-hooks/exhaustive-deps */
-    const setTarget = useCallback(
+    const setTarget = React.useCallback(
         memoize(id => node => {
 
             targets.current.push([id, node])

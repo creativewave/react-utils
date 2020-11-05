@@ -1,15 +1,15 @@
 
-import { useEffect, useRef } from 'react'
+import React from 'react'
 
 /**
  * useTimeout :: ((x -> x) -> Number) -> void
  */
 const useTimeout = (fn, delay) => {
 
-    const ref = useRef()
+    const ref = React.useRef()
 
-    useEffect(() => { ref.current = fn }, [fn]) // eslint-disable-line brace-style
-    useEffect(() => {
+    React.useEffect(() => { ref.current = fn }, [fn]) // eslint-disable-line brace-style
+    React.useEffect(() => {
         if (typeof delay === 'undefined') return
         const id = setTimeout(ref.current, delay)
         return () => clearTimeout(id)
