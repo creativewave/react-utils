@@ -242,7 +242,7 @@ It returns any error message from the Constraint Validation API, and a collectio
 
 **(Components)**
 
-### <Filter>
+## Filter
 
 `<Filter>` provides common filter effects to use in a `SVGElement`. Each filter effect is indentified by a `name` property.
 
