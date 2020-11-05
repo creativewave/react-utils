@@ -34,8 +34,7 @@
     "test:watch": "jest --watchAll -b"
   },
   "dependencies": {
-    "core-js": "^3.6.5",
-    "@cdoublev/animate": "^0.4.0"
+    "core-js": "^3.6.5"
   },
   "devDependencies": {
     "@babel/core": "^7.12.3",
