@@ -331,7 +331,7 @@ const useScrollIntoView = ({
                 setActiveTarget(direction > 0 ? targets.current.length : -1)
                 state.current.isScrolling = false
             }
-            state.current.cleanup = addEventListeners(root.current = node || document, onScroll, state.current)
+            state.current.cleanup = addEventListeners(root.current = node ?? document, onScroll, state.current)
         },
         [
             beforeScroll,

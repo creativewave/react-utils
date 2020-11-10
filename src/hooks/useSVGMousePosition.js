@@ -102,7 +102,7 @@ const useSVGMousePosition = ({
             } else if (hasRoot && !root.current) {
                 return
             }
-            initListener(root.current || target.current, target.current)
+            initListener(root.current ?? target.current, target.current)
         },
         [cleanup, hasRoot, initListener, root, target])
 

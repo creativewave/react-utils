@@ -197,7 +197,7 @@ const primitives = {
  * Memo: the first primitive doesn't require a `in` prop, as it will default to
  * `SourceGraphic` natively.
  */
-const Filter = ({ id, name, ...props }) => {
+const Filter = ({ name, id = name, ...props }) => {
 
     if (props.in || props.result) {
         return primitives[name](props)
@@ -207,7 +207,7 @@ const Filter = ({ id, name, ...props }) => {
         ? { height: '300%', width: '300%', x: '-100%', y: '-100%' }
         : { height: '200%', width: '200%', x: '-50%', y: '-50%' }
 
-    return <filter id={id || name} x={x} y={y} width={width} height={height}>{primitives[name](props)}</filter>
+    return <filter id={id} x={x} y={y} width={width} height={height}>{primitives[name](props)}</filter>
 }
 
 Filter.propTypes = {

@@ -169,7 +169,7 @@ it.each(cases)('%s', (_, Test) => {
      * wheel.
      */
     act(() => {
-        root = container.querySelector('#root') || document
+        root = container.querySelector('#root') ?? document
         root.dispatchEvent(new WheelEvent('wheel', { bubbles: true, deltaY: 1 })) // (2)
         jest.runOnlyPendingTimers() // (1)
     })

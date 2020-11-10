@@ -42,7 +42,7 @@ const createEvent = (type, { button, pointerType, x = 0, y = 0 } = {}) => {
         case 'pointerdown':
             init.button = button // eslint-disable-line no-fallthrough
         case 'pointerup':
-            init.pointerType = pointerType || init.button === TOUCH_BUTTON_ID ? 'touch' : 'mouse'
+            init.pointerType = (pointerType ?? init.button === TOUCH_BUTTON_ID) ? 'touch' : 'mouse'
             init.screenX = x * TOUCH_SENSITIVITY
             init.screenY = y * TOUCH_SENSITIVITY
             return new PointerEvent(type, init)
