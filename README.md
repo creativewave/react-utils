@@ -259,7 +259,7 @@ It returns any error message from the Constraint Validation API, and a collectio
 
 All prop are `Number`s or numerical `String`s except for the `blend` prop of the noise filter, which should be a CSS blend mode (`String`).
 
-Lightness always default to `0`, ie. with no white or black mixed in, and opacity always default to `0.5`.
+Lightness always default to `1`, ie. with no white or black mixed in, and opacity always default to `0.5`.
 
 Using a single filter effect (ie. it should not have a `in` or `result` prop):
 
