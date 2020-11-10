@@ -9,19 +9,44 @@ const Percentage = (props, propName, componentName) => {
     }
 }
 
+const RED_LUMINANCE = 0.2126
+const GREEN_LUMINANCE = 0.7152
+const BLUE_LUMINANCE = 0.0722
+
 /**
  * ColorCorrection :: Props -> React.Element
+ *
+ * Memo: https://drafts.fxtf.org/filter-effects/#element-attrdef-fecolormatrix-values
  */
-const ColorCorrection = ({ lightness: relativeLightness = 1, opacity = 0.5 }) => {
+const ColorCorrection = ({ lightness = 1, opacity = 0.5, saturation = 1 }) => {
 
-    const lightness = 1 * (1 - relativeLightness)
+    const RR = RED_LUMINANCE + ((1 - RED_LUMINANCE) * saturation)
+    const RG = GREEN_LUMINANCE - (GREEN_LUMINANCE * saturation)
+    const RB = BLUE_LUMINANCE - (BLUE_LUMINANCE * saturation)
 
-    return <feColorMatrix values={`1 0 0 0 ${lightness}  0 1 0 0 ${lightness}  0 0 1 0 ${lightness}  0 0 0 ${opacity} 0`} />
+    const GR = RED_LUMINANCE - (RED_LUMINANCE * saturation)
+    const GG = GREEN_LUMINANCE + ((1 - GREEN_LUMINANCE) * saturation)
+    const GB = BLUE_LUMINANCE - (BLUE_LUMINANCE * saturation)
+
+    const BR = RED_LUMINANCE - (RED_LUMINANCE * saturation)
+    const BG = GREEN_LUMINANCE - (GREEN_LUMINANCE * saturation)
+    const BB = BLUE_LUMINANCE + ((1 - BLUE_LUMINANCE) * saturation)
+
+    const LIGHTNESS = 1 * (1 - lightness)
+
+    return (
+        <feColorMatrix values={`
+            ${RR} ${RG} ${RB} ${LIGHTNESS} 0
+            ${GR} ${GG} ${GB} ${LIGHTNESS} 0
+            ${BR} ${BG} ${BB} ${LIGHTNESS} 0
+            0 0 0 ${opacity} 0`} />
+    )
 }
 
 ColorCorrection.propTypes = {
     lightness: NumberOrString,
     opacity: NumberOrString,
+    saturation: NumberOrString,
 }
 
 /**
