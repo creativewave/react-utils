@@ -244,37 +244,59 @@ It returns any error message from the Constraint Validation API, and a collectio
 
 ## Filter
 
-`<Filter>` provides common filter effects to use in a `SVGElement`. Each filter effect is indentified by a `name` property.
+`<Filter>` provides common filter effects to use in a `SVGElement`.
 
-**List of effects and their props:**
+**Effect `name`s and props:**
 
-| Id           | Props                                                          |
-| ------------ | -------------------------------------------------------------- |
-| glow         | blur, spread, lightness, opacity                               |
-| glow-inset   | blur, threshold, lightness, opacity                             |
-| gooey        | tolerance                                                      |
-| noise        | frequency, blend, color (default to black), lightness, opacity |
-| shadow       | offsetX, offsetY, blur, spread, opacity                        |
-| shadow-inset | offsetX, offsetY, blur, threshold, opacity                      |
+| Name             | Props                                       |
+| ---------------- | ------------------------------------------- |
+| color-correction | lightness, opacity                          |
+| glow             | blur, spread, lightness, opacity            |
+| glow-inset       | blur, threshold, lightness, opacity         |
+| gooey            | tolerance                                   |
+| noise            | frequency, blend, color, lightness, opacity |
+| shadow           | offsetX, offsetY, blur, spread, opacity     |
+| shadow-inset     | offsetX, offsetY, blur, threshold, opacity  |
 
-All prop are `Number`s or numerical `String`s except for the `blend` prop of the noise filter, which should be a CSS blend mode (`String`).
+Default values:
 
-Lightness always default to `1`, ie. with no white or black mixed in, and opacity always default to `0.5`.
+- color: `'black'`
+- lightness: `1`
+- opacity: `0.5`
+- offsetX: `0`
+- offsetY: `0`
 
-Using a single filter effect (ie. it should not have a `in` or `result` prop):
+All props require a number, except `blend` (CSS blend mode) and `color` (CSS color).
 
-```js
-    <Filter id='glow-large' name='glow' blur='10' spread='3' opacity='0.3' />
-    <Filter id='glow-small' name='glow' blur='5'  spread='2' opacity='0.7' />
-```
-
-**Note:** `id` will default to `name` if not provided.
-
-Composing filter effects (ie. it should have a `in` and/or a `result` prop):
+**Usage for a single filter effect:**
 
 ```js
-    <filter id='glow-noise' x='-100%' y='-100%' height='300%' width='300%'>
-        <Filter name='glow' blur='10' spread='3' result='glow' />
-        <Filter name='noise' in='glow' opacity='0.2' frequency='0.2' />
-    </filter>
+    <svg viewBox='0 0 100 100'>
+        <Filter id='glow-large' name='glow' blur='10' spread='3' opacity='0.3' />
+        <Filter id='glow-small' name='glow' blur='5'  spread='2' opacity='0.7' />
+        <circle filter='url(#glow-large)' cx='25' cy='25' r='25'>
+        <circle filter='url(#glow-small)' cx='75' cy='75' r='25'>
+    </svg>
 ```
+
+- it should not have a `in` or `result` prop
+- it will automatically be wrapped in a `<filter>`
+- default `'id'` is `'name'`
+- default `'width'`, `'height'` are based on `'name'`
+- default `'x'` is based on `'width'` and default `'y'` is based on `'height'`
+- `'width'`, `'height'`, `'x'`, `'y'` should be provided as percentage values
+
+
+**Usage for composing filter effects:**
+
+```js
+    <svg viewBox='0 0 100 100'>
+        <filter id='glow-noise' x='-100%' y='-100%' height='300%' width='300%'>
+            <Filter name='glow' blur='10' spread='3' result='glow' />
+            <Filter name='noise' in='glow' opacity='0.2' frequency='0.2' />
+        </filter>
+        <circle filter='url(#glow-noise)' cx='50' cy='50' r='25'>
+    </svg>
+```
+
+It should have a `in` and/or a `result` prop.
