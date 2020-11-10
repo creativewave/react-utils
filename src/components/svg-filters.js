@@ -7,8 +7,12 @@ const NumberOrString = PropTypes.oneOfType([PropTypes.string, PropTypes.number])
 /**
  * ColorCorrection :: Props -> React.Element
  */
-const ColorCorrection = ({ lightness = 0, opacity = 0.5 }) =>
-    <feColorMatrix values={`1 0 0 0 ${lightness}  0 1 0 0 ${lightness}  0 0 1 0 ${lightness}  0 0 0 ${opacity} 0`} />
+const ColorCorrection = ({ lightness: relativeLightness = 1, opacity = 0.5 }) => {
+
+    const lightness = 1 * (1 - relativeLightness)
+
+    return <feColorMatrix values={`1 0 0 0 ${lightness}  0 1 0 0 ${lightness}  0 0 1 0 ${lightness}  0 0 0 ${opacity} 0`} />
+}
 
 ColorCorrection.propTypes = {
     lightness: NumberOrString,
