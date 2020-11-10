@@ -250,7 +250,7 @@ It returns any error message from the Constraint Validation API, and a collectio
 
 | Name             | Props                                       |
 | ---------------- | ------------------------------------------- |
-| color-correction | lightness, opacity                          |
+| color-correction | lightness, opacity, saturation              |
 | glow             | blur, spread, lightness, opacity            |
 | glow-inset       | blur, threshold, lightness, opacity         |
 | gooey            | tolerance                                   |
@@ -265,6 +265,7 @@ Default values:
 - opacity: `0.5`
 - offsetX: `0`
 - offsetY: `0`
+- saturation: `1`
 
 All props require a number, except `blend` (CSS blend mode) and `color` (CSS color).
 
