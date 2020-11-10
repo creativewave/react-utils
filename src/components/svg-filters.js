@@ -3,6 +3,11 @@ import PropTypes from 'prop-types'
 import React from 'react'
 
 const NumberOrString = PropTypes.oneOfType([PropTypes.string, PropTypes.number])
+const Percentage = (props, propName, componentName) => {
+    if (props[propName] && !props[propName].endsWith('%')) {
+        return new Error(`Invalid prop ${propName} supplied to ${componentName}. Validation failed.`)
+    }
+}
 
 /**
  * ColorCorrection :: Props -> React.Element
@@ -35,7 +40,7 @@ const Glow = props =>
         <feMorphology in={props.in} operator='dilate' radius={props.spread} />
         <feGaussianBlur stdDeviation={props.blur} />
         <ColorCorrection lightness={props.lightness} opacity={props.opacity} />
-        <feBlend in='SourceGraphic' mode='screen' result={props.result} />
+        <feBlend in={props.in ?? 'SourceGraphic'} mode='screen' result={props.result} />
     </>
 
 Glow.propTypes = {
@@ -58,7 +63,7 @@ const GlowInset = props =>
         <feMorphology in={props.in} operator='erode' radius={props.threshold} />
         <feGaussianBlur stdDeviation={props.blur} result='blur' />
         <ColorCorrection lightness={props.lightness} opacity={props.opacity} />
-        <feBlend in='SourceGraphic' mode='screen' result={props.result} />
+        <feBlend in={props.in ?? 'SourceGraphic'} mode='screen' result={props.result} />
     </>
 
 GlowInset.propTypes = {
@@ -101,8 +106,8 @@ const Noise = ({ blend = 'multiply', color = 'black', ...props }) =>
         <feFlood floodColor={color} />
         <ColorCorrection lightness={props.lightness} opacity={props.opacity} />
         <feComposite in2='noise' operator='in' />
-        <feComposite in={props.in} operator='in' />
-        <feBlend in={props.in} mode={blend} result={props.result} />
+        <feComposite in2={props.in ?? 'SourceGraphic'} operator='in' />
+        <feBlend in={props.in ?? 'SourceGraphic'} mode={blend} result={props.result} />
     </>
 
 Noise.propTypes = {
@@ -137,7 +142,7 @@ const Shadow = ({ offsetX = 0, offsetY = 0, ...props }) =>
         <feComposite in2='blur' operator='in' />
         <ColorCorrection opacity={props.opacity} />
         <feOffset dx={offsetX} dy={offsetY} />
-        <feComposite in={props.in} result={props.result} />
+        <feComposite in={props.in ?? 'SourceGraphic'} result={props.result} />
     </>
 
 Shadow.propTypes = {
@@ -162,9 +167,9 @@ const ShadowInset = ({ offsetX = 0, offsetY = 0, ...props }) =>
         <feMorphology in={props.in} operator='dilate' radius={props.threshold} />
         <feGaussianBlur stdDeviation={props.blur} />
         <feOffset dx={offsetX} dy={offsetY} />
-        <feComposite in='SourceGraphic' operator='out' />
-        <ColorCorrection lightness={props.lightness} opacity={props.opacity} />
-        <feBlend in='SourceGraphic' mode='multiply' result={props.result} />
+        <feComposite in={props.in ?? 'SourceGraphic'} operator='out' />
+        <ColorCorrection opacity={props.opacity} />
+        <feBlend in={props.in ?? 'SourceGraphic'} mode='multiply' result={props.result} />
     </>
 
 ShadowInset.propTypes = {
@@ -190,6 +195,9 @@ const primitives = {
     'shadow-inset': ShadowInset,
 }
 
+const baseArea = { height: '100%', width: '100%', x: '0%', y: '0%' }
+const largeArea = { height: '300%', width: '300%', x: '-100%', y: '-100%' }
+
 /**
  * Filter :: Props -> React.Element
  *
@@ -197,28 +205,41 @@ const primitives = {
  *
  * It should not wrap the filter primitive inside a `<filter>` container if a
  * previous `in` or a following `result` filter primitive id is given as prop.
- *
- * Memo: the first primitive doesn't require a `in` prop, as it will default to
- * `SourceGraphic` natively.
  */
-const Filter = ({ name, id = name, ...props }) => {
+const Filter = ({ height: h, name, id = name, x: offsetX, y: offsetY, width: w, ...props }) => {
 
-    if (props.in || props.result) {
+    const { height, x, y, width } = React.useMemo(
+        () => {
+            if ((w ?? h) && (offsetX ?? offsetY)) {
+                return {
+                    height: h,
+                    width: w,
+                    x: w ? `-${(w.slice(0, -1) - 100) / 2}%` : '0%',
+                    y: h ? `-${(h.slice(0, -1) - 100) / 2}%` : '0%',
+                }
+            } else if (name.endsWith('-inset')) {
+                return baseArea
+            }
+            return largeArea
+        },
+        [h, name, offsetX, offsetY, w])
+
+    if (props.in ?? props.result) {
         return primitives[name](props)
     }
 
-    const { height, width, x, y } = id === 'glow'
-        ? { height: '300%', width: '300%', x: '-100%', y: '-100%' }
-        : { height: '200%', width: '200%', x: '-50%', y: '-50%' }
-
-    return <filter id={id} x={x} y={y} width={width} height={height}>{primitives[name](props)}</filter>
+    return <filter id={id} width={width} height={height} x={offsetX ?? x} y={offsetY ?? y}>{primitives[name](props)}</filter>
 }
 
 Filter.propTypes = {
+    height: Percentage,
     id: PropTypes.string,
     in: PropTypes.string,
     name: PropTypes.oneOf(Object.keys(primitives)),
     result: PropTypes.string,
+    width: Percentage,
+    x: Percentage,
+    y: Percentage,
 }
 
 export default Filter
