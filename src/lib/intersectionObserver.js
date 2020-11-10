@@ -102,4 +102,4 @@ const Mock = class IntersectionObserver {
     }
 }
 
-export default window?.IntersectionObserver ?? Mock
+export default globalThis.IntersectionObserver ?? Mock

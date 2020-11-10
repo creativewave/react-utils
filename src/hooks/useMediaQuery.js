@@ -10,7 +10,7 @@ const useMediaQuery = query => {
 
     React.useEffect(() => {
 
-        const list = window.matchMedia(query)
+        const list = globalThis.matchMedia(query)
         const handleChange = ({ matches }) => setHasMatch(matches)
 
         handleChange(list)
