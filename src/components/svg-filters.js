@@ -231,7 +231,16 @@ const largeArea = { height: '300%', width: '300%', x: '-100%', y: '-100%' }
  * It should not wrap the filter primitive inside a `<filter>` container if a
  * previous `in` or a following `result` filter primitive id is given as prop.
  */
-const Filter = ({ height: h, name, id = name, x: offsetX, y: offsetY, width: w, ...props }) => {
+const Filter = ({
+    colorInterpolation = 'sRGB',
+    height: h,
+    name,
+    id = name,
+    x: offsetX,
+    y: offsetY,
+    width: w,
+    ...props
+}) => {
 
     const { height, x, y, width } = React.useMemo(
         () => {
@@ -253,10 +262,21 @@ const Filter = ({ height: h, name, id = name, x: offsetX, y: offsetY, width: w, 
         return primitives[name](props)
     }
 
-    return <filter id={id} width={width} height={height} x={offsetX ?? x} y={offsetY ?? y}>{primitives[name](props)}</filter>
+    return (
+        <filter
+            id={id}
+            x={offsetX ?? x}
+            y={offsetY ?? y}
+            width={width}
+            height={height}
+            colorInterpolation={colorInterpolation}>
+            {primitives[name](props)}
+        </filter>
+    )
 }
 
 Filter.propTypes = {
+    colorInterpolation: PropTypes.oneOf(['linearRGB', 'sRGB']),
     height: Percentage,
     id: PropTypes.string,
     in: PropTypes.string,

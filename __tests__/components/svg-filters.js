@@ -31,6 +31,7 @@ it('should set default attributes', () => {
     expect(filter.getAttribute('height')).toBe('300%')
     expect(filter.getAttribute('x')).toBe('-100%')
     expect(filter.getAttribute('y')).toBe('-100%')
+    expect(filter.getAttribute('color-interpolation')).toBe('sRGB')
     // Only when last primitive is <feBlend>, <feComposite>, or <feMerge>
     expect(filter.lastElementChild.getAttribute('in')).toBe('SourceGraphic')
 
