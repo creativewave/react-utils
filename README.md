@@ -282,6 +282,7 @@ All props require a number, except `blend` (CSS blend mode) and `color` (CSS col
 
 - it should not have a `in` or `result` prop
 - it will automatically be wrapped in a `<filter>`
+- default `'colorInterpolation'` (for the `color-interpolation-filter` attribute) is `'sRGB'`
 - default `'id'` is `'name'`
 - default `'width'`, `'height'` are based on `'name'`
 - default `'x'` is based on `'width'` and default `'y'` is based on `'height'`
