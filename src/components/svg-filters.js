@@ -52,13 +52,12 @@ ColorCorrection.propTypes = {
 /**
  * Glow :: Props -> React.Element
  *
- * Memo: a glow should cast a bright light using the same tint as the graphic
- * source, with a higher luminosity and a lower saturation, ie. blended over the
- * graphic source using the screen `mode` of `<feBlend>`.
+ * Memo: a glow should spread over the whole graphic source and it should be the
+ * same color as the graphic source but with a higher luminosity and a lower
+ * saturation, ie. blended with the screen mode.
  *
  * Memo: multiple glows can be stacked to get a more realistic result, using
- * different values and direction, ie. a pair of two different values for
- * `radius`.
+ * different opacity/lightness and different `radius` ratios.
  */
 const Glow = props =>
     <>
@@ -79,9 +78,9 @@ Glow.propTypes = {
 /**
  * GlowInset :: Props -> React.Element
  *
- * Memo: an inset glow should cast a bright light from the center of the graphic
- * source, using the same tint with a higher luminosity and a lower saturation,
- * ie. blended over the graphic source using the screen `mode` of `<feBlend>`.
+ * Memo: an inset glow should spread from the center towards the edges of the
+ * graphic source, and it should be the same color but with a higher luminosity
+ * and a lower saturation, ie. blended with the screen mode.
  */
 const GlowInset = props =>
     <>
@@ -102,9 +101,9 @@ GlowInset.propTypes = {
 /**
  * Gooey :: Props -> React.Element
  *
- * Memo: `stdDeviation` is used as a factor to increase the global alpha value
- * of the graphic source, and to raise it using its constant modifier, in order
- * to soften the outline of the graphic source.
+ * Memo: `stdDeviation` is used as a factor both for the global alpha value, to
+ * "dilate" the (blurred) outline, and for its constant modifier, to "erode" and
+ * re-sharpen the outline.
  */
 const Gooey = props =>
     <>
@@ -149,12 +148,10 @@ Noise.propTypes = {
 /**
  * shadow :: Props -> React.Element
  *
- * Memo: ideally, a shadow should cast a light using the same tint as objects
- * it covers, with a lower luminosity and a higher saturation, ie. blended over
- * them using the multiply `mode` of `<feBlend>`, but SVG filters can be blended
- * only with their single graphic source object. A partial workaround would be
- * to use a copy of the graphic source, blur it, render only the pixels outside
- * of the graphic source, and finally define `mix-blend-mode: multiply` in CSS.
+ * Memo: a shadow should spread outside the graphic source and ideally it should
+ * be the same color(s) as the object(s) it covers but with a lower luminosity
+ * and a higher saturation, ie. blended with the multiply mode, but SVG filters
+ * can only be blended with a single graphic source object.
  *
  * Memo: don't use this filter alone, as it's non-sense to use JavaScript to
  * apply a filter already available and optimized as a CSS function.
@@ -183,9 +180,17 @@ Shadow.propTypes = {
 /**
  * ShadowInset :: Props -> React.Element
  *
- * Memo: an inset shadow should cast a dark light using the same tint as the
- * graphic source, with a lower luminosity and a higher saturation, ie. blended
- * over the graphic source using the multiply `mode` of `<feBlend>`.
+ * Memo: an inset shadow should spread from the outline towards the center of
+ * the graphic source, and ideally it should be the same color but with a lower
+ * luminosity and a higher saturation, ie. blended with the multiply mode, but
+ * blending white with itself with the multiply mode will not produce anything.
+ *
+ * Memo: an important `saturation` value (eg. 5) should be given to achieve the
+ * result described above, otherwise it will just be a shade of the source
+ * graphic color.
+ *
+ * Memo: don't use this filter alone, as it's non-sense to use JavaScript to
+ * apply a filter already available and optimized as a CSS function.
  */
 const ShadowInset = ({ offsetX = 0, offsetY = 0, ...props }) =>
     <>
