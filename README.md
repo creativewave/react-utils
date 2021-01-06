@@ -101,7 +101,7 @@ It will stop executing `Function` if:
 
 ## useGatherMemo
 
-`useGatherMemo` abstracts merging, gathering, and/or picking properties from object(s), while memoizing the result, ie. by preserving reference(s).
+`useGatherMemo` abstracts gathering (merging) and/or picking (destructuring) properties from object(s) while memoizing the result to avoid unneeded updates in the component and its children.
 
 It's a low level hook that can be usefull eg. when you want to merge options or props received in a hook or a component with a large default options object, instead of listing each option argument with a default value and/or listing each one as a dependency of a hook.
 
@@ -110,20 +110,31 @@ It's a low level hook that can be usefull eg. when you want to merge options or 
 **Example:**
 
 ```js
-    const options = { color: 'red', size: 'large' }
+const options = { color: 'red', size: 'large' }
 
-    // 1. Pick prop(s) and gather the rest
-    //    Both constants will be defined with a memoized value/reference,
-    //    if `options` shallow equals its previous render value
-    const [color, subOptions] = useGatherMemo(options, 'color')
-    /*   { color, ...rest } = options */
-    console.log(color, subOptions) // 'red' { size: 'large' }
+/**
+ * 1. Pick prop(s) and gather the rest
+ *
+ * Both constants will be defined with a memoized value/reference, if `options`
+ * shallow equals its previous render value
+ */
 
-    // 2. Merge properties
-    //    `allOptions` will be defined with a memoized reference,
-    //    if `subOptions` shallow equals its previous render value
-    const allOptions = useGatherMemo({ ...subOptions, display: 'fullscreen' })
-    console.log(allOptions) // { size: 'large', display: 'fullscreen' }
+// Write this:
+const [color, subOptions] = useGatherMemo(options, 'color')
+// Instead of this:
+const { color, ...subOptions } = options
+
+/**
+ * 2. Gather properties
+ *
+ * `allOptions` will be defined with a memoized reference, if `subOptions`
+ * shallow equals its previous render value.
+ */
+
+// Write this:
+const allOptions = useGatherMemo({ ...subOptions, display: 'fullscreen' })
+// Instead of this:
+const allOptions = { ...subOptions, display: 'fullscreen' }
 ```
 
 **Warning:** don't over use it, ie. use it only with large objects, otherwise it will negatively impact performances by increasing the call stack as well as the amount of data stored in memory.
@@ -246,17 +257,53 @@ It returns any error message from the Constraint Validation API, and a collectio
 
 `<Filter>` provides common filter effects to use in a `SVGElement`.
 
+**Usage for a single filter effect:**
+
+```js
+<svg viewBox='0 0 100 100'>
+  <Filter id='glow-large' name='glow' blur='10' spread='3' opacity='0.3' />
+  <Filter id='glow-small' name='glow' blur='5'  spread='2' opacity='0.7' />
+  <circle filter='url(#glow-large)' cx='25' cy='25' r='25'>
+  <circle filter='url(#glow-small)' cx='75' cy='75' r='25'>
+</svg>
+```
+
+When used alone, `<Filter>` should not have a `in` or `result` and it will automatically be wrapped in a `<filter>` with the following default prop values:
+
+- `'colorInterpolation'` (for the `color-interpolation-filter` attribute): `'sRGB'`
+- `'id'`: `'name'`
+- `'width'` and `'height'`: based on `'name'`
+- `'x'` and `'y'`: based on `'width'` and `'height'`
+
+`'width'`, `'height'`, `'x'`, `'y'` should be provided as percentage values.
+
+All effect's names are listed further below.
+
+**Usage for composing filter effects:**
+
+```js
+<svg viewBox='0 0 100 100'>
+  <filter id='glow-noise' x='-100%' y='-100%' height='300%' width='300%'>
+    <Filter name='glow' blur='10' spread='3' result='glow' />
+    <Filter name='noise' in='glow' opacity='0.2' frequency='0.2' />
+  </filter>
+  <circle filter='url(#glow-noise)' cx='50' cy='50' r='25'>
+</svg>
+```
+
+When composed with each other, `<Filter>`s should have a `in` and a `result` prop, except the last `<Filter>`, which should only have a `in` prop.
+
 **Effect `name`s and props:**
 
-| Name             | Props                                       |
-| ---------------- | ------------------------------------------- |
-| color-correction | lightness, opacity, saturation              |
-| glow             | blur, spread, lightness, opacity            |
-| glow-inset       | blur, threshold, lightness, opacity         |
-| gooey            | tolerance                                   |
-| noise            | frequency, blend, color, lightness, opacity |
-| shadow           | offsetX, offsetY, blur, spread, opacity     |
-| shadow-inset     | offsetX, offsetY, blur, threshold, opacity  |
+| Name             | Props                                               |
+| ---------------- | --------------------------------------------------- |
+| color-correction | lightness, opacity, saturation                      |
+| glow             | blur, spread, lightness, opacity                    |
+| glow-inset       | blur, threshold, lightness, opacity                 |
+| gooey            | tolerance                                           |
+| noise            | frequency, blend, color, lightness, opacity         |
+| shadow           | offsetX, offsetY, blur, spread, opacity, saturation |
+| shadow-inset     | offsetX, offsetY, blur, spread, opacity, saturation |
 
 Default values:
 
@@ -268,37 +315,3 @@ Default values:
 - saturation: `1`
 
 All props require a number, except `blend` (CSS blend mode) and `color` (CSS color).
-
-**Usage for a single filter effect:**
-
-```js
-    <svg viewBox='0 0 100 100'>
-        <Filter id='glow-large' name='glow' blur='10' spread='3' opacity='0.3' />
-        <Filter id='glow-small' name='glow' blur='5'  spread='2' opacity='0.7' />
-        <circle filter='url(#glow-large)' cx='25' cy='25' r='25'>
-        <circle filter='url(#glow-small)' cx='75' cy='75' r='25'>
-    </svg>
-```
-
-- it should not have a `in` or `result` prop
-- it will automatically be wrapped in a `<filter>`
-- default `'colorInterpolation'` (for the `color-interpolation-filter` attribute) is `'sRGB'`
-- default `'id'` is `'name'`
-- default `'width'`, `'height'` are based on `'name'`
-- default `'x'` is based on `'width'` and default `'y'` is based on `'height'`
-- `'width'`, `'height'`, `'x'`, `'y'` should be provided as percentage values
-
-
-**Usage for composing filter effects:**
-
-```js
-    <svg viewBox='0 0 100 100'>
-        <filter id='glow-noise' x='-100%' y='-100%' height='300%' width='300%'>
-            <Filter name='glow' blur='10' spread='3' result='glow' />
-            <Filter name='noise' in='glow' opacity='0.2' frequency='0.2' />
-        </filter>
-        <circle filter='url(#glow-noise)' cx='50' cy='50' r='25'>
-    </svg>
-```
-
-It should have a `in` and/or a `result` prop.
