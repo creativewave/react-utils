@@ -189,12 +189,16 @@ Shadow.propTypes = {
  */
 const ShadowInset = ({ offsetX = 0, offsetY = 0, ...props }) =>
     <>
-        <feMorphology in={props.in} operator='dilate' radius={props.threshold} />
+        <feMorphology in={props.in} operator='erode' radius={props.spread} />
         <feGaussianBlur stdDeviation={props.blur} />
-        <feOffset dx={offsetX} dy={offsetY} />
-        <feComposite in={props.in ?? 'SourceGraphic'} operator='out' />
-        <ColorCorrection opacity={props.opacity} />
-        <feBlend in={props.in ?? 'SourceGraphic'} mode='multiply' result={props.result} />
+        <feOffset dx={offsetX} dy={offsetY} result='blur' />
+        <feFlood floodColor='black' />
+        <feComposite in2='blur' operator='out' />
+        <feComposite in2={props.in ?? 'SourceGraphic'} operator='in' result='shadow' />
+        <feComposite in={props.in ?? 'SourceGraphic'} operator='in' />
+        <feComposite in='shadow' operator='over' />
+        <ColorCorrection opacity={props.opacity} saturation={props.saturation} />
+        <feComposite in2={props.in ?? 'SourceGraphic'} result={props.result} />
     </>
 
 ShadowInset.propTypes = {
