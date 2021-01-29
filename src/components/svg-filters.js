@@ -172,11 +172,11 @@ Scale.propTypes = {
  * Memo: don't use this filter alone, as it's non-sense to use JavaScript to
  * apply a filter already available and optimized as a CSS function.
  */
-const Shadow = ({ offsetX = 0, offsetY = 0, ...props }) =>
+const Shadow = ({ color = 'black', offsetX = 0, offsetY = 0, ...props }) =>
     <>
         <Scale {...props} />
         <feGaussianBlur stdDeviation={props.blur} result='_blur' />
-        <feFlood floodColor='black' />
+        <feFlood floodColor={color} />
         <feComposite in2='_blur' operator='in' />
         <ColorCorrection opacity={props.opacity} />
         <feOffset dx={offsetX} dy={offsetY} />
@@ -185,6 +185,7 @@ const Shadow = ({ offsetX = 0, offsetY = 0, ...props }) =>
 
 Shadow.propTypes = {
     blur: NumberOrString.isRequired,
+    color: PropTypes.string,
     in: PropTypes.string,
     offsetX: NumberOrString,
     offsetY: NumberOrString,
@@ -209,12 +210,12 @@ Shadow.propTypes = {
  * Memo: don't use this filter alone, as it's non-sense to use JavaScript to
  * apply a filter already available and optimized as a CSS function.
  */
-const ShadowInset = ({ offsetX = 0, offsetY = 0, ...props }) =>
+const ShadowInset = ({ color = 'black', offsetX = 0, offsetY = 0, ...props }) =>
     <>
         <Scale in={props.in} spread={props.threshold} threshold={props.spread} />
         <feGaussianBlur stdDeviation={props.blur} />
         <feOffset dx={offsetX} dy={offsetY} result='_blur' />
-        <feFlood floodColor='black' />
+        <feFlood floodColor={color} />
         <feComposite in2='_blur' operator='out' />
         <feComposite in2={props.in ?? 'SourceGraphic'} operator='in' result='_shadow' />
         <feComposite in={props.in ?? 'SourceGraphic'} operator='in' />
@@ -226,6 +227,7 @@ const ShadowInset = ({ offsetX = 0, offsetY = 0, ...props }) =>
 ShadowInset.propTypes = {
     ...ColorCorrection.propTypes,
     blur: NumberOrString.isRequired,
+    color: PropTypes.string,
     in: PropTypes.string,
     offsetX: NumberOrString,
     offsetY: NumberOrString,

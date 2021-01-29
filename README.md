@@ -295,15 +295,15 @@ When composed, `<Filter>`s should have a `in` and eventually a `result` prop (de
 
 **Effect `name`s and props:**
 
-| Name             | Props                                                          |
-| ---------------- | -------------------------------------------------------------- |
-| color-correction | lightness, opacity, saturation                                 |
-| glow             | blur, spread, lightness, opacity                               |
-| glow-inset       | blur, threshold, lightness, opacity                            |
-| gooey            | tolerance                                                      |
-| noise            | frequency, blend, color, lightness, opacity                    |
-| shadow           | offsetX, offsetY, blur, spread, threshold, opacity, saturation |
-| shadow-inset     | offsetX, offsetY, blur, spread, threshold, opacity, saturation |
+| Name             | Props                                                                 |
+| ---------------- | --------------------------------------------------------------------- |
+| color-correction | lightness, opacity, saturation                                        |
+| glow             | blur, spread, lightness, opacity                                      |
+| glow-inset       | blur, threshold, lightness, opacity                                   |
+| gooey            | tolerance                                                             |
+| noise            | frequency, blend, color, lightness, opacity                           |
+| shadow           | color, offsetX, offsetY, blur, spread, threshold, opacity, saturation |
+| shadow-inset     | color, offsetX, offsetY, blur, spread, threshold, opacity, saturation |
 
 Default values:
 
