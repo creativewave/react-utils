@@ -17,8 +17,9 @@ const browserExternalRegexp = new RegExp(`^(${browserExternals.join('|')})`)
 const replaceEnv = replace({ 'process.env.NODE_ENV': process.env.NODE_ENV })
 
 const getBabelConfig = targets => ({
-    babelHelpers: 'bundled',
+    babelHelpers: 'runtime',
     exclude: /node_modules/,
+    plugins: ['@babel/plugin-transform-runtime'],
     presets: [
         ['@babel/preset-env', {
             corejs: '3.8',
