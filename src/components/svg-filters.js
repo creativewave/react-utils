@@ -85,7 +85,7 @@ Glow.propTypes = {
 const GlowInset = props =>
     <>
         <feMorphology in={props.in} operator='erode' radius={props.threshold} />
-        <feGaussianBlur stdDeviation={props.blur} result='blur' />
+        <feGaussianBlur stdDeviation={props.blur} />
         <ColorCorrection lightness={props.lightness} opacity={props.opacity} />
         <feBlend in={props.in ?? 'SourceGraphic'} mode='screen' result={props.result} />
     </>
@@ -126,10 +126,10 @@ Gooey.propTypes = {
  */
 const Noise = ({ blend = 'multiply', color = 'black', ...props }) =>
     <>
-        <feTurbulence baseFrequency={props.frequency} result='noise' />
+        <feTurbulence baseFrequency={props.frequency} result='_noise' />
         <feFlood floodColor={color} />
         <ColorCorrection lightness={props.lightness} opacity={props.opacity} />
-        <feComposite in2='noise' operator='in' />
+        <feComposite in2='_noise' operator='in' />
         <feComposite in2={props.in ?? 'SourceGraphic'} operator='in' />
         <feBlend in={props.in ?? 'SourceGraphic'} mode={blend} result={props.result} />
     </>
@@ -159,9 +159,9 @@ Noise.propTypes = {
 const Shadow = ({ offsetX = 0, offsetY = 0, ...props }) =>
     <>
         <feMorphology in={props.in} operator='dilate' radius={props.spread} />
-        <feGaussianBlur stdDeviation={props.blur} result='blur' />
+        <feGaussianBlur stdDeviation={props.blur} result='_blur' />
         <feFlood floodColor='black' />
-        <feComposite in2='blur' operator='in' />
+        <feComposite in2='_blur' operator='in' />
         <ColorCorrection opacity={props.opacity} />
         <feOffset dx={offsetX} dy={offsetY} />
         <feComposite in={props.in ?? 'SourceGraphic'} result={props.result} />
@@ -196,12 +196,12 @@ const ShadowInset = ({ offsetX = 0, offsetY = 0, ...props }) =>
     <>
         <feMorphology in={props.in} operator='erode' radius={props.spread} />
         <feGaussianBlur stdDeviation={props.blur} />
-        <feOffset dx={offsetX} dy={offsetY} result='blur' />
+        <feOffset dx={offsetX} dy={offsetY} result='_blur' />
         <feFlood floodColor='black' />
-        <feComposite in2='blur' operator='out' />
-        <feComposite in2={props.in ?? 'SourceGraphic'} operator='in' result='shadow' />
+        <feComposite in2='_blur' operator='out' />
+        <feComposite in2={props.in ?? 'SourceGraphic'} operator='in' result='_shadow' />
         <feComposite in={props.in ?? 'SourceGraphic'} operator='in' />
-        <feComposite in='shadow' operator='over' />
+        <feComposite in='_shadow' operator='over' />
         <ColorCorrection opacity={props.opacity} saturation={props.saturation} />
         <feComposite in2={props.in ?? 'SourceGraphic'} result={props.result} />
     </>
