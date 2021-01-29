@@ -46,7 +46,7 @@ it('should set default attributes', () => {
     expect(filter.getAttribute('x')).toBe('0%')
     expect(filter.getAttribute('y')).toBe('0%')
 })
-it('should set expected dimension/coordinate atributes', () => {
+it('should set expected dimension/coordinate attributes', () => {
 
     act(() => {
         render(<svg><Filter name='shadow' x='50%' height='300%' /></svg>, container)
