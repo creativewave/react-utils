@@ -298,7 +298,7 @@ const Filter = ({
             y={offsetY ?? y}
             width={width}
             height={height}
-            colorInterpolation={colorInterpolation}>
+            colorInterpolation={colorInterpolation.toLowerCase() === 'srgb' ? 'sRGB' : null}>
             {primitives[name](props)}
         </filter>
     )
