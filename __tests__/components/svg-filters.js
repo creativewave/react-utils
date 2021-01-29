@@ -65,13 +65,16 @@ it('should compose multiple filter primitives when given a `in` prop', () => {
         render(
             <svg>
                 <filter id='shadow-glow'>
-                    <Filter result='shadow' name='shadow' />
+                    <Filter name='shadow' />
                     <Filter in='shadow' name='glow' />
                 </filter>
             </svg>,
             container)
     })
 
+    const filter = container.querySelector('filter')
+
+    expect(filter.querySelector('[result="shadow"]')).not.toBeNull()
     // Ie. blend/compose/merge in the result of the previous effect.
-    expect(container.querySelector('filter').lastElementChild.getAttribute('in')).toBe('shadow')
+    expect(filter.lastElementChild.getAttribute('in')).toBe('shadow')
 })

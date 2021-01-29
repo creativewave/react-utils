@@ -18,7 +18,7 @@ const BLUE_LUMINANCE = 0.0722
  *
  * Memo: https://drafts.fxtf.org/filter-effects/#element-attrdef-fecolormatrix-values
  */
-const ColorCorrection = ({ lightness = 1, opacity = 0.5, saturation = 1 }) => {
+const ColorCorrection = ({ lightness = 1, opacity = 0.5, saturation = 1, result = 'color-correction' }) => {
 
     const RR = RED_LUMINANCE + ((1 - RED_LUMINANCE) * saturation)
     const RG = GREEN_LUMINANCE - (GREEN_LUMINANCE * saturation)
@@ -35,11 +35,13 @@ const ColorCorrection = ({ lightness = 1, opacity = 0.5, saturation = 1 }) => {
     const LIGHTNESS = 1 * (1 - lightness)
 
     return (
-        <feColorMatrix values={`
-            ${RR} ${RG} ${RB} ${LIGHTNESS} 0
-            ${GR} ${GG} ${GB} ${LIGHTNESS} 0
-            ${BR} ${BG} ${BB} ${LIGHTNESS} 0
-            0 0 0 ${opacity} 0`} />
+        <feColorMatrix
+            values={`
+                ${RR} ${RG} ${RB} ${LIGHTNESS} 0
+                ${GR} ${GG} ${GB} ${LIGHTNESS} 0
+                ${BR} ${BG} ${BB} ${LIGHTNESS} 0
+                0 0 0 ${opacity} 0`}
+            result={result} />
     )
 }
 
@@ -64,7 +66,7 @@ const Glow = props =>
         <feMorphology in={props.in} operator='dilate' radius={props.spread} />
         <feGaussianBlur stdDeviation={props.blur} />
         <ColorCorrection lightness={props.lightness} opacity={props.opacity} />
-        <feBlend in={props.in ?? 'SourceGraphic'} mode='screen' result={props.result} />
+        <feBlend in={props.in ?? 'SourceGraphic'} mode='screen' result={props.result ?? 'glow'} />
     </>
 
 Glow.propTypes = {
@@ -87,7 +89,7 @@ const GlowInset = props =>
         <feMorphology in={props.in} operator='erode' radius={props.threshold} />
         <feGaussianBlur stdDeviation={props.blur} />
         <ColorCorrection lightness={props.lightness} opacity={props.opacity} />
-        <feBlend in={props.in ?? 'SourceGraphic'} mode='screen' result={props.result} />
+        <feBlend in={props.in ?? 'SourceGraphic'} mode='screen' result={props.result ?? 'glow-inset'} />
     </>
 
 GlowInset.propTypes = {
@@ -109,7 +111,7 @@ const Gooey = props =>
     <>
         <feGaussianBlur in={props.in} stdDeviation={props.tolerance} />
         <feColorMatrix mode='matrix' values={`1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 ${props.tolerance * 4} -${props.tolerance * 2}`} />
-        <feComposite in='SourceGraphic' operator='atop' result={props.result} />
+        <feComposite in='SourceGraphic' operator='atop' result={props.result ?? 'gooey'} />
     </>
 
 Gooey.propTypes = {
@@ -131,7 +133,7 @@ const Noise = ({ blend = 'multiply', color = 'black', ...props }) =>
         <ColorCorrection lightness={props.lightness} opacity={props.opacity} />
         <feComposite in2='_noise' operator='in' />
         <feComposite in2={props.in ?? 'SourceGraphic'} operator='in' />
-        <feBlend in={props.in ?? 'SourceGraphic'} mode={blend} result={props.result} />
+        <feBlend in={props.in ?? 'SourceGraphic'} mode={blend} result={props.result ?? 'noise'} />
     </>
 
 Noise.propTypes = {
@@ -164,7 +166,7 @@ const Shadow = ({ offsetX = 0, offsetY = 0, ...props }) =>
         <feComposite in2='_blur' operator='in' />
         <ColorCorrection opacity={props.opacity} />
         <feOffset dx={offsetX} dy={offsetY} />
-        <feComposite in={props.in ?? 'SourceGraphic'} result={props.result} />
+        <feComposite in={props.in ?? 'SourceGraphic'} result={props.result ?? 'shadow'} />
     </>
 
 Shadow.propTypes = {
@@ -203,7 +205,7 @@ const ShadowInset = ({ offsetX = 0, offsetY = 0, ...props }) =>
         <feComposite in={props.in ?? 'SourceGraphic'} operator='in' />
         <feComposite in='_shadow' operator='over' />
         <ColorCorrection opacity={props.opacity} saturation={props.saturation} />
-        <feComposite in2={props.in ?? 'SourceGraphic'} result={props.result} />
+        <feComposite in2={props.in ?? 'SourceGraphic'} result={props.result ?? 'shadow-inset'} />
     </>
 
 ShadowInset.propTypes = {

@@ -291,7 +291,7 @@ All effect's names are listed further below.
 </svg>
 ```
 
-When composed with each other, `<Filter>`s should have a `in` and a `result` prop, except the last `<Filter>`, which should only have a `in` prop.
+When composed, `<Filter>`s should have a `in` and eventually a `result` prop (defaults to `name` and not required for the last `<Filter>` in the composition).
 
 **Effect `name`s and props:**
 
