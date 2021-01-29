@@ -21,7 +21,7 @@
     "dist"
   ],
   "type": "module",
-  "module": "dist/es/index.js",
+  "main": "dist/es/index.js",
   "unpkg": "dist/umd/react-utils.min.js",
   "scripts": {
     "prebuild": "rm -rf dist",
