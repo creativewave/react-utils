@@ -63,7 +63,7 @@ ColorCorrection.propTypes = {
  */
 const Glow = props =>
     <>
-        <feMorphology in={props.in} operator='dilate' radius={props.spread} />
+        <Scale {...props} />
         <feGaussianBlur stdDeviation={props.blur} />
         <ColorCorrection lightness={props.lightness} opacity={props.opacity} />
         <feBlend in={props.in ?? 'SourceGraphic'} mode='screen' result={props.result ?? 'glow'} />
@@ -74,7 +74,8 @@ Glow.propTypes = {
     blur: NumberOrString.isRequired,
     in: PropTypes.string,
     result: PropTypes.string,
-    spread: NumberOrString.isRequired,
+    spread: NumberOrString,
+    threshold: NumberOrString,
 }
 
 /**
@@ -84,20 +85,15 @@ Glow.propTypes = {
  * graphic source, and it should be the same color but with a higher luminosity
  * and a lower saturation, ie. blended with the screen mode.
  */
-const GlowInset = props =>
-    <>
-        <feMorphology in={props.in} operator='erode' radius={props.threshold} />
-        <feGaussianBlur stdDeviation={props.blur} />
-        <ColorCorrection lightness={props.lightness} opacity={props.opacity} />
-        <feBlend in={props.in ?? 'SourceGraphic'} mode='screen' result={props.result ?? 'glow-inset'} />
-    </>
+const GlowInset = props => <Glow operator='erode' result='glow-inset' {...props} />
 
 GlowInset.propTypes = {
     ...ColorCorrection.propTypes,
     blur: NumberOrString.isRequired,
     in: PropTypes.string,
     result: PropTypes.string,
-    threshold: NumberOrString.isRequired,
+    spread: NumberOrString,
+    threshold: NumberOrString,
 }
 
 /**
@@ -148,6 +144,24 @@ Noise.propTypes = {
 }
 
 /**
+ * Scale :: Props -> React.Element
+ */
+const Scale = props => {
+    if (props.spread > 0) {
+        return <feMorphology in={props.in} operator='dilate' radius={props.spread} />
+    } else if (props.threshold > 0) {
+        return <feMorphology in={props.in} radius={props.threshold} />
+    }
+    return null
+}
+
+Scale.propTypes = {
+    in: PropTypes.string,
+    spread: NumberOrString,
+    threshold: NumberOrString,
+}
+
+/**
  * shadow :: Props -> React.Element
  *
  * Memo: a shadow should spread outside the graphic source and ideally it should
@@ -160,7 +174,7 @@ Noise.propTypes = {
  */
 const Shadow = ({ offsetX = 0, offsetY = 0, ...props }) =>
     <>
-        <feMorphology in={props.in} operator='dilate' radius={props.spread} />
+        <Scale {...props} />
         <feGaussianBlur stdDeviation={props.blur} result='_blur' />
         <feFlood floodColor='black' />
         <feComposite in2='_blur' operator='in' />
@@ -176,7 +190,8 @@ Shadow.propTypes = {
     offsetY: NumberOrString,
     opacity: NumberOrString,
     result: PropTypes.string,
-    spread: NumberOrString.isRequired,
+    spread: NumberOrString,
+    threshold: NumberOrString,
 }
 
 /**
@@ -196,7 +211,7 @@ Shadow.propTypes = {
  */
 const ShadowInset = ({ offsetX = 0, offsetY = 0, ...props }) =>
     <>
-        <feMorphology in={props.in} operator='erode' radius={props.spread} />
+        <Scale in={props.in} spread={props.threshold} threshold={props.spread} />
         <feGaussianBlur stdDeviation={props.blur} />
         <feOffset dx={offsetX} dy={offsetY} result='_blur' />
         <feFlood floodColor='black' />
@@ -215,7 +230,8 @@ ShadowInset.propTypes = {
     offsetX: NumberOrString,
     offsetY: NumberOrString,
     result: PropTypes.string,
-    threshold: NumberOrString.isRequired,
+    spread: NumberOrString,
+    threshold: NumberOrString,
 }
 
 /**
