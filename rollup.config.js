@@ -21,7 +21,7 @@ const getBabelConfig = targets => ({
     exclude: /node_modules/,
     presets: [
         ['@babel/preset-env', {
-            corejs: 3,
+            corejs: '3.8',
             // debug: true,
             targets,
             useBuiltIns: 'usage',
