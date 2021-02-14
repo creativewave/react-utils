@@ -284,7 +284,7 @@ All effect's names are listed further below.
 ```js
 <svg viewBox='0 0 100 100'>
   <filter id='glow-noise' x='-100%' y='-100%' height='300%' width='300%'>
-    <Filter name='glow' blur='10' spread='3' result='glow' />
+    <Filter name='glow' blur='10' spread='3' />
     <Filter name='noise' in='glow' opacity='0.2' frequency='0.2' />
   </filter>
   <circle filter='url(#glow-noise)' cx='50' cy='50' r='25'>
