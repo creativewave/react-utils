@@ -7,7 +7,7 @@
     "react",
     "react-hooks"
   ],
-  "version": "0.9.1",
+  "version": "0.10.0",
   "engines": {
     "node": ">= 15"
   },
@@ -38,7 +38,8 @@
     "test:watch": "jest --watchAll -b"
   },
   "dependencies": {
-    "core-js": "^3.8.3"
+    "core-js": "^3.8.3",
+    "@cdoublev/animate": "^0.5.0"
   },
   "devDependencies": {
     "@babel/core": "^7.12.16",
