@@ -1,9 +1,9 @@
 
-import IntersectionObserver from '../lib/intersectionObserver'
+import IntersectionObserver from '../lib/intersectionObserver.js'
 import React from 'react'
-import log from '../lib/log'
-import memoize from '../lib/memoize'
-import noop from '../lib/noop'
+import log from '../lib/log.js'
+import memoize from '../lib/memoize.js'
+import noop from '../lib/noop.js'
 
 let DEBUG
 

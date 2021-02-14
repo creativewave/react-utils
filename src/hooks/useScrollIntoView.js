@@ -1,10 +1,10 @@
 
 import React from 'react'
-import { universalDocument as document } from '../lib/universal'
-import log from '../lib/log'
-import memoize from '../lib/memoize'
-import noop from '../lib/noop'
-import useIntersectionObserver from './useIntersectionObserver'
+import { universalDocument as document } from '../lib/universal.js'
+import log from '../lib/log.js'
+import memoize from '../lib/memoize.js'
+import noop from '../lib/noop.js'
+import useIntersectionObserver from './useIntersectionObserver.js'
 
 /**
  * The distance in pixels that a finger or stylus should move to be handled as a

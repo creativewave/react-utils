@@ -1,9 +1,9 @@
 
 import { render, unmountComponentAtNode } from 'react-dom'
-import useScrollIntoView, { TOUCH_BUTTON_ID, TOUCH_SENSITIVITY, WHEEL_BUTTON_ID } from '../../src/hooks/useScrollIntoView'
+import useScrollIntoView, { TOUCH_BUTTON_ID, TOUCH_SENSITIVITY, WHEEL_BUTTON_ID } from '../../src/hooks/useScrollIntoView.js'
 import React from 'react'
 import { act } from 'react-dom/test-utils'
-import { observers } from '../../src/hooks/useIntersectionObserver'
+import { observers } from '../../src/hooks/useIntersectionObserver.js'
 
 const touches = jest.spyOn(TouchEvent.prototype, 'touches', 'get')
 

@@ -2,7 +2,7 @@
 import { render, unmountComponentAtNode } from 'react-dom'
 import React from 'react'
 import { act } from 'react-dom/test-utils'
-import useSVGMousePosition from '../../src/hooks/useSVGMousePosition'
+import useSVGMousePosition from '../../src/hooks/useSVGMousePosition.js'
 
 let container
 

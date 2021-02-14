@@ -1,5 +1,5 @@
 
-import now from './now'
+import now from './now.js'
 
 let currentTaskId = 1
 const cancelledTaskIds = []

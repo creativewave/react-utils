@@ -1,5 +1,5 @@
 
-import { universalDocument as document } from './universal'
+import { universalDocument as document } from './universal.js'
 
 /**
  * This mock of `IntersectionObserver` assumes that:

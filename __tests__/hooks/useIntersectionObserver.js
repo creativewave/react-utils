@@ -1,6 +1,6 @@
 
 import { render, unmountComponentAtNode } from 'react-dom'
-import useIntersectionObserver, { ExtendedIntersectionObserver, observers } from '../../src/hooks/useIntersectionObserver'
+import useIntersectionObserver, { ExtendedIntersectionObserver, observers } from '../../src/hooks/useIntersectionObserver.js'
 import React from 'react'
 import { act } from 'react-dom/test-utils'
 

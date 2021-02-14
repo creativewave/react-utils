@@ -1,6 +1,6 @@
 
 import React from 'react'
-import shallowEqual from '../lib/shallowEqual'
+import shallowEqual from '../lib/shallowEqual.js'
 
 /**
  * useGatherMemo :: (Object -> ...String|Symbol) -> [a, Object]

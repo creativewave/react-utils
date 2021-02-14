@@ -1,8 +1,8 @@
 
 import React from 'react'
-import noop from '../lib/noop'
-import round from '../lib/round'
-import task from '../lib/task'
+import noop from '../lib/noop.js'
+import round from '../lib/round.js'
+import task from '../lib/task.js'
 
 const defaultPosition = { x: 0, y: 0 }
 

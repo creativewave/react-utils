@@ -2,65 +2,28 @@
 import babel from '@rollup/plugin-babel'
 import commonjs from '@rollup/plugin-commonjs'
 import nodeResolve from '@rollup/plugin-node-resolve'
-import pkg from './package.json'
 import replace from '@rollup/plugin-replace'
 import { terser } from 'rollup-plugin-terser'
+import { unpkg } from './package.json'
 
-const browserExternals = Object.keys({
-    ...pkg.optionalDependencies,
-    ...pkg.peerDependencies,
-}).concat('prop-types')
-const buildExternals = browserExternals.concat(Object.keys(pkg.dependencies))
-const buildExternalRegexp = new RegExp(`^(${buildExternals.join('|')})`)
-const browserExternalRegexp = new RegExp(`^(${browserExternals.join('|')})`)
-
-const replaceEnv = replace({ 'process.env.NODE_ENV': process.env.NODE_ENV })
-
-const getBabelConfig = targets => ({
-    babelHelpers: 'runtime',
-    exclude: /node_modules/,
-    plugins: ['@babel/plugin-transform-runtime'],
-    presets: [
-        ['@babel/preset-env', {
-            corejs: '3.8',
-            // debug: true,
-            targets,
-            useBuiltIns: 'usage',
-        }],
-        '@babel/preset-react',
-    ]
-})
-
-export default [
-    {
-        external: id => buildExternalRegexp.test(id),
-        input: 'src/index.js',
-        output: {
-            file: pkg.main,
-            format: 'es',
+export default {
+    external: ['@cdoublev/animate', 'react', 'prop-types'],
+    input: 'src/index.js',
+    output: {
+        file: unpkg,
+        format: 'umd',
+        globals: {
+            '@cdoublev/animate': 'animate',
+            'prop-types': 'PropTypes',
+            'react': 'React',
         },
-        plugins: [replaceEnv, babel(getBabelConfig({ esmodules: true }))],
+        name: 'ReactUtils',
     },
-    {
-        external: id => browserExternalRegexp.test(id),
-        input: 'src/index.js',
-        output: {
-            file: pkg.unpkg,
-            format: 'umd',
-            globals: {
-                '@cdoublev/animate': 'animate',
-                'prop-types': 'PropTypes',
-                'react': 'React',
-                'react-dom': 'ReactDOM',
-            },
-            name: 'ReactUtils',
-        },
-        plugins: [
-            replaceEnv,
-            nodeResolve(),
-            babel(getBabelConfig('defaults')),
-            commonjs(),
-            terser(),
-        ],
-    },
-]
+    plugins: [
+        replace({ 'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV) }),
+        nodeResolve(),
+        babel({ babelHelpers: 'bundled' }),
+        commonjs(),
+        terser(),
+    ],
+}

@@ -1,6 +1,6 @@
 
 import { render, unmountComponentAtNode } from 'react-dom'
-import Filter from '../../src/components/svg-filters'
+import Filter from '../../src/components/svg-filters.js'
 import React from 'react'
 import { act } from 'react-dom/test-utils'
 
