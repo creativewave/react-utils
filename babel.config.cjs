@@ -1,5 +1,6 @@
 
 const { dependencies } = require('./package.json')
+
 const presetEnv = { corejs: dependencies['core-js'], useBuiltIns: 'usage' }
 const presets = [['@babel/preset-env', presetEnv], ['@babel/preset-react']]
 
@@ -7,6 +8,9 @@ module.exports = api => {
 
     const env = api.env()
 
+    if (env === 'node') {
+        presetEnv.modules = false
+    }
     if (env === 'browser' || env === 'development') {
         presetEnv.targets = { esmodules: true }
     } else {
@@ -17,5 +21,9 @@ module.exports = api => {
         return { exclude: /core-js/, presets }
     }
 
-    return { exclude: /node_modules/, presets }
+    return {
+        exclude: /node_modules/,
+        plugins: [['@babel/plugin-transform-runtime', { version: dependencies['@babel/runtime'] }]],
+        presets,
+    }
 }

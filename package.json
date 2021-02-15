@@ -18,18 +18,19 @@
     "test": "__tests__"
   },
   "files": [
-    "dist",
-    "src"
+    "dist"
   ],
   "type": "module",
   "exports": {
-    ".": "./src/index.js",
+    ".": "./dist/node/index.js",
     "./package.json": "./package.json"
   },
-  "unpkg": "dist/react-utils.js",
+  "unpkg": "dist/browser/react-utils.js",
   "scripts": {
     "prebuild": "rm -rf dist",
-    "build": "rollup -c --environment NODE_ENV:browser",
+    "build:browser": "rollup -c --environment NODE_ENV:browser",
+    "build:node": "babel src -d dist/node --env-name node",
+    "build": "npm run build:browser && npm run build:node",
     "lint": "eslint src __tests__",
     "safe-publish": "npm run lint && npm run test && npm run build && npm publish",
     "test": "jest",
@@ -38,11 +39,14 @@
     "test:watch": "jest --watchAll -b"
   },
   "dependencies": {
+    "@babel/runtime": "^7.12.13",
     "core-js": "^3.8.3"
   },
   "devDependencies": {
+    "@babel/cli": "^7.12.16",
     "@babel/core": "^7.12.16",
     "@babel/eslint-parser": "^7.12.16",
+    "@babel/plugin-transform-runtime": "^7.12.15",
     "@babel/preset-env": "^7.12.16",
     "@babel/preset-react": "^7.12.13",
     "@cdoublev/eslint-config": "^0.8.2",
