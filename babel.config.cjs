@@ -1,29 +1,29 @@
 
 const { dependencies } = require('./package.json')
 
-const presetEnv = { corejs: dependencies['core-js'], useBuiltIns: 'usage' }
+const plugins = []
+const presetEnv = {
+    bugfixes: true,
+    corejs: { proposals: true, version: dependencies['core-js'] },
+    useBuiltIns: 'usage',
+}
 const presets = [['@babel/preset-env', presetEnv], ['@babel/preset-react']]
 
 module.exports = api => {
 
     const env = api.env()
 
+    if (env === 'browser') {
+        presetEnv.targets = { esmodules: true }
+        return { exclude: /core-js/, plugins, presets }
+    }
+
+    presetEnv.targets = { node: true }
+
     if (env === 'node') {
+        plugins.push(['@babel/plugin-transform-runtime', { version: dependencies['@babel/runtime'] }])
         presetEnv.modules = false
     }
-    if (env === 'browser' || env === 'development') {
-        presetEnv.targets = { esmodules: true }
-    } else {
-        presetEnv.targets = { node: true }
-    }
 
-    if (env === 'browser') {
-        return { exclude: /core-js/, presets }
-    }
-
-    return {
-        exclude: /node_modules/,
-        plugins: [['@babel/plugin-transform-runtime', { version: dependencies['@babel/runtime'] }]],
-        presets,
-    }
+    return { exclude: /node_modules/, plugins, presets }
 }
