@@ -3,32 +3,40 @@
 
 # React Utils
 
+- [About](#about)
+- [Installation](#installation)
+- [API](#API)
+  - [Hooks](#Hooks)
+    - [`useAnimate`](#useAnimate)
+    - [`useAnimateCustom`](#useAnimateCustom)
+    - [`useIntersectionObserver`](#useIntersectionObserver)
+    - [`useInterval`](#useInterval)
+    - [`useGatherMemo`](#useGatherMemo)
+    - [`useLazyStateUpdate`](#useLazyStateUpdate)
+    - [`useMediaQuery`](#useMediaQuery)
+    - [`useScrollIntoView`](#useScrollIntoView)
+    - [`useSVGMousePosition`](#useSVGMousePosition)
+    - [`useTimeout`](#useTimeout)
+    - [`useTransition`](#useTransition)
+    - [`useValidation`](#useValidation)
+  - [Components](#Components)
+    - [`<Filter>`](#Filter)
+
+## About
+
 This package contains common hooks and components to use in a React application.
 
-**Hooks**
+## Installation
 
-- [`useAnimate`](#useAnimate)
-- [`useAnimateCustom`](#useAnimateCustom)
-- [`useIntersectionObserver`](#useIntersectionObserver)
-- [`useInterval`](#useInterval)
-- [`useGatherMemo`](#useGatherMemo)
-- [`useLazyStateUpdate`](#useLazyStateUpdate)
-- [`useMediaQuery`](#useMediaQuery)
-- [`useScrollIntoView`](#useScrollIntoView)
-- [`useSVGMousePosition`](#useSVGMousePosition)
-- [`useTimeout`](#useTimeout)
-- [`useTransition`](#useTransition)
-- [`useValidation`](#useValidation)
+`npm i @cdoublev/react-utils`
 
-**Components**
+`@cdoublev/react-utils` is built with the current NodeJS version as target, meaning that it should probably be transpiled in order to be used in your application using its own targets.
 
-- [`<Filter>`](#Filter)
+## API
 
-***
+### Hooks
 
-**(Hooks)**
-
-## useAnimate
+#### useAnimate
 
 `useAnimate` abstracts using `Element.animate()` from the Web Animation API ([MDN](https://developer.mozilla.org/en-US/docs/Web/API/Web_Animations_API)).
 
@@ -42,7 +50,7 @@ This package contains common hooks and components to use in a React application.
 
 **Example:** [CodePen](https://codepen.io/creative-wave/pen/JjjZRyE)
 
-## useAnimateCustom
+#### useAnimateCustom
 
 `useAnimateCustom` abstracts using `animate()`, a lightweight alternative to [`Element.animate()`](https://developer.mozilla.org/en-US/docs/Web/API/Web_Animations_API) or its [official polyfill](https://github.com/web-animations/web-animations-js), with some [extra features](https://github.com/creativewave/animate#extra-features).
 
@@ -63,7 +71,7 @@ Related:
 - [(React) Framer Motion](https://www.framer.com/api/motion/)
 - [Tween.js](https://github.com/tweenjs/tween.js)
 
-## useIntersectionObserver
+#### useIntersectionObserver
 
 `useIntersectionObserver` abstracts using an `IntersectionObserver` to execute a function when an `Element` intersects an ancestor, ie. when it enters in or exits from its viewport.
 
@@ -86,7 +94,7 @@ Each observed `Element` will be unobserved before unmount, and the current `Inte
 
 **Note:** make sure to use a memoized value for `threshold` if it's an `Array`, as well as for `onEnter` and `onExit`.
 
-## useInterval
+#### useInterval
 
 *Credit: [Dan Abramov](https://overreacted.io/making-setinterval-declarative-with-react-hooks/).*
 
@@ -99,7 +107,7 @@ It will stop executing `Function` if:
 - the reference to `Function` has changed
 - the delay (`Number`) has changed
 
-## useGatherMemo
+#### useGatherMemo
 
 `useGatherMemo` abstracts gathering (merging) and/or picking (destructuring) properties from object(s) while memoizing the result to avoid unneeded updates in the component and its children.
 
@@ -139,7 +147,7 @@ const allOptions = { ...subOptions, display: 'fullscreen' }
 
 **Warning:** don't over use it, ie. use it only with large objects, otherwise it will negatively impact performances by increasing the call stack as well as the amount of data stored in memory.
 
-## useLazyStateUpdate
+#### useLazyStateUpdate
 
 `useLazyStateUpdate` abstracts delaying a state update.
 
@@ -149,13 +157,13 @@ It could be used eg. to delay the render of an error notice after validating an 
 
 `useLazyStateUpdate :: [a, Number] -> a`
 
-## useMediaQuery
+#### useMediaQuery
 
 `useMediaQuery` abstracts using `windows.matchMedia()` to observe a match against a query, eg. `(min-width: 50em)`.
 
 `useMediaQuery :: String -> Boolean`
 
-## useScrollIntoView
+#### useScrollIntoView
 
 `useScrollIntoView` abstracts using `Element.scrollIntoView()` when a `scroll` event is emitted.
 
@@ -187,7 +195,7 @@ Both should be used. To set `document` as `root`, the corresponding callback ref
 - `onEnter` and `onExit` are optional callbacks defined in [`useIntersectionObserver`](#useIntersectionObserver)
 - `touchSensitivity` (default to `150`) is a distance in pixels that the finger or stylus should move to be handled as a scroll event
 
-## useSVGMousePosition
+#### useSVGMousePosition
 
 `useSVGMousePosition` abstracts translating the position of the mouse relative to an `<svg>` in `document`, into a position relative to its `viewBox`.
 
@@ -210,7 +218,7 @@ The first [`CallbackRef`](https://reactjs.org/docs/refs-and-the-dom.html#callbac
 - `isFixed` (default to `false`) is an optional `Boolean` to flag the `target` as having a fixed position in the viewport of `document`, ie. in `window`
 - `precision` (default to `2`) is an optional number to round `Position` values
 
-## useTimeout
+#### useTimeout
 
 `useTimeout` abstracts using `setTimeout()` and `clearTimeout()` to schedule the execution of a `Function`, without worrying about cancelling the timer to avoid a memory leak such as *a React state update on an unmounted component*.
 
@@ -221,7 +229,7 @@ It will stop executing `Function` if:
 - the reference to `Function` has changed
 - the delay (`Number`) has changed
 
-## useTransition
+#### useTransition
 
 `useTransition` abstracts scheduling multiple state updates over time using different delays and durations.
 
@@ -241,7 +249,7 @@ Related packages:
 - [React Transition Group](https://github.com/reactjs/react-transition-group)
 - [React Spring (useTransition)](https://www.react-spring.io/docs/hooks/use-transition)
 
-## useValidation
+#### useValidation
 
 `useValidation` abstracts using the Constraint Validation API ([MDN](https://developer.mozilla.org/en-US/docs/Web/API/Constraint_validation)) to validate a form field on blur (default) or on change.
 
@@ -249,11 +257,9 @@ Related packages:
 
 It returns any error message from the Constraint Validation API, and a collection of component properties such as `onChange` and `onBlur` event handlers, to assign to an `<input>`, `<select>` or `<textarea>`. Each of those handlers will be composed with a corresponding handler given as argument.
 
-***
+### Components
 
-**(Components)**
-
-## Filter
+#### Filter
 
 `<Filter>` provides common filter effects to use in a `SVGElement`.
 
