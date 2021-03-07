@@ -7,10 +7,10 @@ const notPolyfilled = [
 ]
 
 module.exports = {
-    extends: ['@cdoublev/eslint-config', '@cdoublev/eslint-config/react'],
+    extends: ['@cdoublev/eslint-config', '@cdoublev/eslint-config/node', '@cdoublev/eslint-config/react'],
     overrides: [
         {
-            extends: ['@cdoublev/eslint-config/node', '@cdoublev/eslint-config/jest'],
+            extends: ['@cdoublev/eslint-config/jest'],
             files: ['__tests__/**/*.js'],
             globals: {
                 Element: 'readonly',
