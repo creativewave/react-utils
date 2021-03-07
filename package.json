@@ -22,16 +22,20 @@
   ],
   "type": "module",
   "exports": {
-    ".": "./dist/node/index.js",
+    ".": {
+      "import": "./dist/es/index.js",
+      "require": "./dist/cjs/index.cjs"
+    },
     "./package.json": "./package.json"
   },
-  "unpkg": "dist/browser/react-utils.js",
+  "unpkg": "dist/umd/react-utils.js",
   "scripts": {
     "prebuild": "rm -rf dist",
-    "build:browser": "rollup -c --environment NODE_ENV:browser",
-    "build:node": "babel src -d dist/node --env-name node",
-    "build": "npm run build:browser && npm run build:node",
-    "lint": "eslint src __tests__",
+    "build:cjs": "rollup -c --environment NODE_ENV:cjs",
+    "build:es": "babel src -d dist/es --env-name es",
+    "build:umd": "rollup -c --environment NODE_ENV:umd",
+    "build": "npm run build:cjs && npm run build:es && npm run build:umd",
+    "lint": "eslint __tests__ src",
     "safe-publish": "npm run lint && npm run test && npm run build && npm publish",
     "test": "jest",
     "test:inspect": "node --inspect=0.0.0.0:9222 ./node_modules/.bin/jest --watchAll -b",
