@@ -1,6 +1,6 @@
 
 import React from 'react'
-import animate from '@cdoublev/animate'
+import animate from '@cdoublev/animate' // eslint-disable-line node/no-missing-import
 
 /**
  * useAnimateCustom :: Ref -> (Keyframes -> Options) -> Animate
