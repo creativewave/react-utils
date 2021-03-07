@@ -30,7 +30,7 @@ This package contains common hooks and components to use in a React application.
 
 `npm i @cdoublev/react-utils`
 
-`@cdoublev/react-utils` is built with the current NodeJS version as target, meaning that it should probably be transpiled in order to be used in your application using its own targets.
+`@cdoublev/react-utils` is built to run in the current version of NodeJS, which means it should be transpiled with your application using its own targets.
 
 ## API
 
